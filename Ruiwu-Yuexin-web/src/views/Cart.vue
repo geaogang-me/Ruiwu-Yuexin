@@ -79,7 +79,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/plugins/axios";
-import { ElMessage } from "element-plus";
+import Swal from "sweetalert2";
 import { ArrowLeft } from "@element-plus/icons-vue";
 import { useStore } from "vuex";
 
@@ -109,11 +109,23 @@ const fetchCart = async () => {
       cartItems.value = res.data.data.reverse();
       store.commit("setCartCount", cartItems.value.length);
     } else {
-      ElMessage.error("获取购物车失败：" + res.data.msg);
+      Swal.fire({
+        icon: "error",
+        title: "获取购物车失败",
+        text: res.data.msg,
+        timer: 1500,
+        showConfirmButton: false,
+      });
     }
   } catch (err) {
     console.error("获取购物车失败：", err);
-    ElMessage.error("网络错误，无法获取购物车");
+    Swal.fire({
+      icon: "error",
+      title: "请求失败",
+      text: "请稍后重试",
+      timer: 1500,
+      showConfirmButton: false,
+    });
   } finally {
     loading.value = false;
   }
@@ -129,14 +141,30 @@ const deleteItem = async (item) => {
     });
 
     if (res.data.code === "200") {
-      ElMessage.success("删除成功");
+      Swal.fire({
+        icon: "success",
+        title: "删除成功",
+        timer: 1500,
+        showConfirmButton: false,
+      });
       fetchCart();
     } else {
-      ElMessage.error("删除失败：" + res.data.msg);
+      Swal.fire({
+        icon: "error",
+        title: "删除失败",
+        text: res.data.msg,
+        timer: 1500,
+        showConfirmButton: false,
+      });
     }
   } catch (err) {
     console.error("删除失败：", err);
-    ElMessage.error("网络错误，删除失败");
+    Swal.fire({
+      icon: "error",
+      title: "网络错误",
+      timer: 1500,
+      showConfirmButton: false,
+    });
   }
 };
 
@@ -150,9 +178,14 @@ const checkout = () => {
     num: item.num,
   }));
   console.log("结算商品：", goods);
-  ElMessage.success(
-    `共 ${goods.length} 件商品，总价 ¥${totalSelectedPrice.value}`
-  );
+  Swal.fire({
+    icon: "success",
+    title: `共 ${goods.length} 件商品`,
+    text: `总价 ¥${totalSelectedPrice.value}`,
+    timer: 1500,
+    showConfirmButton: false,
+  });
+
   showQrDialog.value = true;
 };
 
