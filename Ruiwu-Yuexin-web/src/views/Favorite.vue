@@ -26,7 +26,7 @@
             <el-button
               type="danger"
               size="small"
-              @click="removeFavorite(item.id)"
+              @click.stop="removeFavorite(item.id)"
             >
               取消收藏
             </el-button>
@@ -41,7 +41,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/plugins/axios";
-import { ElMessage, ElMessageBox } from "element-plus";
+import Swal from "sweetalert2";
 
 const userId = JSON.parse(localStorage.getItem("userInfo"))?.id || null;
 // 从登录信息中获取用户 ID，示例写死
@@ -58,10 +58,20 @@ const fetchFavorites = async () => {
     if (res.data.code === "200") {
       favorites.value = res.data.data;
     } else {
-      ElMessage.error(res.data.msg || "加载收藏失败");
+      Swal.fire({
+        icon: "error",
+        title: "加载收藏失败",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     }
   } catch (err) {
-    ElMessage.error("请求失败");
+    Swal.fire({
+      icon: "error",
+      title: "请求失败",
+      timer: 1500,
+      showConfirmButton: false,
+    });
   }
 };
 const toDetail = (goodId) => {
@@ -69,22 +79,34 @@ const toDetail = (goodId) => {
 };
 const removeFavorite = async (goodId) => {
   try {
-    // await ElMessageBox.confirm("确定要取消收藏该商品吗？", "提示", {
-    //   type: "warning",
-    // });
     const res = await api.delete("/favorite/remove", {
       params: { userId, goodId },
     });
     if (res.data.code === "200") {
-      ElMessage.success("取消收藏成功");
+      Swal.fire({
+        icon: "success",
+        title: "已取消收藏",
+        timer: 1500,
+        showConfirmButton: false,
+      });
       fetchFavorites();
     } else {
-      ElMessage.error(res.data.msg || "取消失败");
+      Swal.fire({
+        icon: "error",
+        title: res.data.msg || "取消失败",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     }
   } catch (err) {
     // 用户取消弹窗时不提示错误
     if (err !== "cancel") {
-      ElMessage.error("请求失败");
+      Swal.fire({
+        icon: "error",
+        title: "请求失败",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     }
   }
 };
