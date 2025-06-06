@@ -7,6 +7,7 @@ import 'element-plus/dist/index.css';
 import VueImageMagnifier from 'vue-image-magnifier';
 import api from './plugins/axios';    // <--- 你封装的 axios 实例
 import 'sweetalert2/dist/sweetalert2.min.css';
+import '@/assets/css/global.css';
 
 const app = createApp(App);
 
