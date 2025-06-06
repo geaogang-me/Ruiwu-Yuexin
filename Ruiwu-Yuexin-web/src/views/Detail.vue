@@ -105,7 +105,7 @@ import { ref, reactive, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useStore } from "vuex";
 import api from "@/plugins/axios";
-import { ElMessage } from "element-plus";
+import Swal from "sweetalert2";
 import OrderDialog from "@/components/OrderDialog.vue";
 import { useAuth } from "@/composables/useAuth";
 
@@ -189,19 +189,33 @@ async function addToCart() {
       headers: { Authorization: `Bearer ${userInfo.value.token}` },
     });
     if (response.data.code === "200") {
-      ElMessage.success("🛒 商品已成功加入购物车！");
+      Swal.fire({
+        icon: "success",
+        title: "🛒 商品已成功加入购物车！",
+        timer: 1500,
+        showConfirmButton: false,
+      });
       cartCount.value++;
       store.commit("setCartCount", cartCount.value);
     } else {
-      ElMessage.error(`加入购物车失败：${response.data.msg || "未知错误"}`);
+      Swal.fire({
+        icon: "error",
+        title: "加入购物车失败",
+        text: response.data.msg || "未知错误",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     }
   } catch (error) {
     console.error("加入购物车失败：", error);
-    ElMessage.error(
-      error.response?.data?.msg
+    Swal.fire({
+      icon: "error",
+      title: error.response?.data?.msg
         ? `加入购物车失败：${error.response.data.msg}`
-        : "加入购物车失败，请稍后再试。"
-    );
+        : "加入购物车失败，请稍后再试。",
+      timer: 1500,
+      showConfirmButton: false,
+    });
   }
 }
 
@@ -248,9 +262,20 @@ async function toggleFavorite() {
       });
       if (res.data.code === "200") {
         isFavorite.value = true;
-        ElMessage.success("收藏成功！");
+        Swal.fire({
+          icon: "success",
+          title: "收藏成功",
+          timer: 1000,
+          showConfirmButton: false,
+        });
       } else {
-        ElMessage.error(`收藏失败：${res.data.msg || "未知错误"}`);
+        Swal.fire({
+          icon: "error",
+          title: "收藏失败",
+          text: response.data.msg || "未知错误",
+          timer: 1500,
+          showConfirmButton: false,
+        });
       }
     } else {
       const res = await api.delete("/favorite/remove", {
@@ -258,14 +283,30 @@ async function toggleFavorite() {
       });
       if (res.data.code === "200") {
         isFavorite.value = false;
-        ElMessage.success("取消收藏成功！");
+        Swal.fire({
+          icon: "success",
+          title: "已取消收藏",
+          timer: 1000,
+          showConfirmButton: false,
+        });
       } else {
-        ElMessage.error(`取消收藏失败：${res.data.msg || "未知错误"}`);
+        Swal.fire({
+          icon: "error",
+          title: "取消收藏失败",
+          text: response.data.msg || "未知错误",
+          timer: 1500,
+          showConfirmButton: false,
+        });
       }
     }
   } catch (e) {
     console.error("收藏操作异常", e);
-    ElMessage.error("操作失败，请稍后再试。");
+    Swal.fire({
+      icon: "error",
+      title: "操作失败，请稍后重试",
+      timer: 1500,
+      showConfirmButton: false,
+    });
   }
 }
 
