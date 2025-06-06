@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gag.RuiwuYuexin.mapper.FavoriteMapper">
+
+    <select id="selectGoodIdsByUserId" resultType="java.lang.Long">
+        SELECT good_id FROM favorite WHERE user_id = #{userId}
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectFavoriteGoodsByUserId" resultType="com.gag.RuiwuYuexin.dto.FavoriteDto">
+        SELECT
+        g.id,
+        g.good_name AS goodName,
+        g.good_image AS goodImage,
+        g.price
+        FROM favorite uf
+        JOIN goods g ON uf.good_id = g.id
+        WHERE uf.user_id = #{userId}
+        ORDER BY uf.create_time DESC
+    </select>
+
+
+
+</mapper>

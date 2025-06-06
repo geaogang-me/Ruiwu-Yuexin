@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gag.RuiwuYuexin.mapper.OrderMapper">
+
+    <select id="getOrderDetailsByUserId" resultType="com.gag.RuiwuYuexin.dto.OrderDetailDto">
+        SELECT
+        o.id,
+        o.user_id,
+        o.address_id,
+        o.num,
+        o.price,
+        o.status,
+        o.created,
+        g.good_name,
+        g.good_image,
+        g.price AS unit_price
+        FROM orders o
+        JOIN goods g
+        ON o.good_id = g.id
+        WHERE o.user_id = #{userId}
+        ORDER BY o.created DESC
+    </select>
+
+</mapper>

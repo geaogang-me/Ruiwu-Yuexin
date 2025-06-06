@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gag.RuiwuYuexin.mapper.CartMapper">
+
+    <!-- 原始Cart对象的映射 -->
+    <resultMap id="CartResultMap" type="com.gag.RuiwuYuexin.entity.Cart">
+        <id     property="id"       column="id"/>
+        <result property="userId"   column="user_id"/>
+        <result property="goodId"   column="good_id"/>
+        <result property="num"      column="num"/>
+    </resultMap>
+
+    <!-- 联表查询返回DTO对象的映射 -->
+    <resultMap id="CartItemResultMap" type="com.gag.RuiwuYuexin.dto.CartItemDTO">
+        <result property="num"        column="num"/>
+        <result property="goodName"   column="good_name"/>
+        <result property="goodImage"  column="good_image"/>
+        <result property="price"      column="price"/>
+    </resultMap>
+
+    <insert id="addToCart" parameterType="com.gag.RuiwuYuexin.entity.Cart" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO cart (user_id, good_id, num)
+        VALUES (#{userId}, #{goodId}, #{num})
+    </insert>
+
+    <select id="selectByUserId" resultMap="CartItemResultMap">
+        SELECT
+        c.num,
+        c.good_id,
+        g.good_name,
+        g.good_image,
+        g.price
+        FROM cart c
+        INNER JOIN goods g ON c.good_id = g.id
+        WHERE c.user_id = #{userId}
+    </select>
+    <delete id="deleteByUserIdAndGoodId">
+        DELETE FROM cart WHERE user_id = #{userId} AND good_id = #{goodId}
+    </delete>
+</mapper>

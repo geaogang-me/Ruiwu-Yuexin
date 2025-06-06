@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gag.RuiwuYuexin.mapper.GoodsMapper">
+
+
+    <!-- 分页查询 -->
+    <select id="findGoodsPage" resultType="com.gag.RuiwuYuexin.entity.Goods">
+        SELECT * FROM goods
+        <where>
+            <choose>
+                <when test="type == 'good'">
+                    good_name LIKE #{keyword}
+                </when>
+                <when test="type == 'shop'">
+                    shop_name LIKE #{keyword}
+                </when>
+            </choose>
+        </where>
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 总数统计 -->
+    <select id="countGoods" resultType="int">
+        SELECT COUNT(*) FROM goods
+        <where>
+            <choose>
+                <when test="type == 'good'">
+                    good_name LIKE #{keyword}
+                </when>
+                <when test="type == 'shop'">
+                    shop_name LIKE #{keyword}
+                </when>
+            </choose>
+        </where>
+    </select>
+    <select id="selectGoodsByIds" resultType="com.gag.RuiwuYuexin.dto.FavoriteDto">
+        SELECT id, good_name as goodName,  good_image as goodImage, price
+        FROM goods
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+
+</mapper>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gag.RuiwuYuexin.mapper.UserMapper">
+
+    <!-- 1. 定义一个 resultMap，把下划线列名映射到实体的驼峰属性 -->
+    <resultMap id="UserResultMap" type="com.gag.RuiwuYuexin.entity.User">
+        <id     property="id"         column="id"/>
+        <result property="username"   column="username"/>
+        <result property="sex"        column="sex"/>
+        <result property="password"   column="password"/>
+        <result property="phone"      column="phone"/>
+        <result property="email"      column="email"/>
+        <result property="address"    column="address"/>
+        <result property="avatar"     column="avatar"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!-- 2. 插入新用户 -->
+    <insert id="insertUser" parameterType="com.gag.RuiwuYuexin.entity.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `user`
+        (username, password, phone, email, address, avatar, create_time, update_time)
+        VALUES
+        (#{username}, #{password}, #{phone}, #{email}, #{address}, #{avatar}, NOW(), NOW())
+    </insert>
+
+    <!-- 3. 登录查询（如果需要全部字段也可以用 resultMap） -->
+    <select id="findByUsernameAndPassword" resultMap="UserResultMap" parameterType="map">
+        SELECT
+        id,
+        username,
+        sex,
+        password,
+        phone,
+        email,
+        address,
+        avatar,
+        create_time,
+        update_time
+        FROM `user`
+        WHERE username = #{username}
+        AND password = #{password}
+        LIMIT 1
+    </select>
+
+    <!-- 4. 根据用户名查询（用于加载个人信息） -->
+    <select id="findByUserName" resultMap="UserResultMap" parameterType="string">
+        SELECT
+        id,
+        username,
+        sex,
+        password,
+        phone,
+        email,
+        address,
+        avatar,
+        create_time,
+        update_time
+        FROM `user`
+        WHERE username = #{username}
+        LIMIT 1
+    </select>
+    <select id="findById" resultMap="UserResultMap" parameterType="Long">
+        SELECT
+        id,
+        username,
+        sex,
+        password,
+        phone,
+        email,
+        address,
+        avatar,
+        create_time,
+        update_time
+        FROM `user`
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <!-- 5. 更新个人信息 -->
+    <update id="updateById" parameterType="com.gag.RuiwuYuexin.entity.User">
+        UPDATE `user`
+        <set>
+            <if test="username != null and username != ''">username    = #{username},</if>
+            <if test="password != null and password != ''">password    = #{password},</if>
+            <if test="sex      != null">sex         = #{sex},</if>
+            <if test="phone    != null and phone != ''">phone       = #{phone},</if>
+            <if test="email    != null and email != ''">email       = #{email},</if>
+            <if test="address  != null">address     = #{address},</if>
+            <if test="avatar   != null and avatar  != ''">avatar      = #{avatar},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+</mapper>
