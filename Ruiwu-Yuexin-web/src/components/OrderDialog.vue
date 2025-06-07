@@ -137,7 +137,7 @@
 <script setup>
 import { ref, watch, computed } from "vue";
 import api from "@/plugins/axios";
-import { ElMessage } from "element-plus";
+import Swal from "sweetalert2";
 import { nextTick } from "vue";
 import { useRouter } from "vue-router";
 const router = useRouter();
@@ -191,10 +191,20 @@ async function loadAddresses() {
         selectedAddressId.value = addresses.value[0].id;
       }
     } else {
-      ElMessage.error(res.data.msg || "加载地址失败");
+      Swal.fire({
+        icon: "error",
+        title: res.data.msg || "加载地址失败",
+        timer: 1000,
+        showConfirmButton: false,
+      });
     }
   } catch {
-    ElMessage.error("加载地址失败");
+    Swal.fire({
+      icon: "error",
+      title: "加载地址失败",
+      timer: 1000,
+      showConfirmButton: false,
+    });
   }
 }
 // 当数量变化时，可以在这里做额外逻辑（例如校验库存）
@@ -222,7 +232,12 @@ function startEdit(row) {
 
 async function submitOrder() {
   if (!selectedAddressId.value) {
-    ElMessage.warning("请选择收货地址");
+    Swal.fire({
+      icon: "warning",
+      title: "请选择收货地址",
+      timer: 1000,
+      showConfirmButton: false,
+    });
     return;
   }
   const payload = {
@@ -234,15 +249,30 @@ async function submitOrder() {
   try {
     const res = await api.post("/order/create", payload);
     if (res.data.code === "200") {
-      ElMessage.success("订单提交成功");
+      Swal.fire({
+        icon: "success",
+        title: "订单提交成功",
+        timer: 1000,
+        showConfirmButton: false,
+      });
       emit("order-submitted");
       emit("update:visible", false);
       router.push("/order");
     } else {
-      ElMessage.error("提交失败：" + res.data.msg);
+      Swal.fire({
+        icon: "error",
+        title: res.data.msg || "提交失败",
+        timer: 1000,
+        showConfirmButton: false,
+      });
     }
   } catch {
-    ElMessage.error("提交订单出错");
+    Swal.fire({
+      icon: "error",
+      title: "提交订单出错",
+      timer: 1000,
+      showConfirmButton: false,
+    });
   }
 }
 async function submitNewAddress() {
@@ -253,7 +283,12 @@ async function submitNewAddress() {
       const payload = { userId, ...newAddr.value };
       const res = await api.post("/address/add", payload);
       if (res.data.code === "200") {
-        ElMessage.success("添加地址成功");
+        Swal.fire({
+          icon: "success",
+          title: "地址已添加",
+          timer: 1000,
+          showConfirmButton: false,
+        });
         showAddDialog.value = false;
         // 清空表单
         Object.assign(newAddr.value, {
@@ -265,11 +300,21 @@ async function submitNewAddress() {
         // 重新加载列表
         await loadAddresses();
       } else {
-        ElMessage.error(res.data.msg || "添加失败");
+        Swal.fire({
+          icon: "error",
+          title: res.data.msg || "添加失败",
+          timer: 1000,
+          showConfirmButton: false,
+        });
       }
     } catch (e) {
       console.error(e);
-      ElMessage.error("添加地址出错");
+      Swal.fire({
+        icon: "error",
+        title: "添加地址出错",
+        timer: 1000,
+        showConfirmButton: false,
+      });
     }
   });
 }
@@ -279,14 +324,29 @@ async function submitEditAddress() {
     try {
       const res = await api.put("/address/update", editAddr.value);
       if (res.data.code === "200") {
-        ElMessage.success("修改成功");
+        Swal.fire({
+          icon: "success",
+          title: "修改成功",
+          timer: 1000,
+          showConfirmButton: false,
+        });
         showEditDialog.value = false;
         loadAddresses();
       } else {
-        ElMessage.error(res.data.msg || "修改失败");
+        Swal.fire({
+          icon: "error",
+          title: res.data.msg || "修改失败",
+          timer: 1000,
+          showConfirmButton: false,
+        });
       }
     } catch {
-      ElMessage.error("修改出错");
+      Swal.fire({
+        icon: "error",
+        title: "修改出错",
+        timer: 1000,
+        showConfirmButton: false,
+      });
     }
   });
 }
@@ -294,10 +354,20 @@ async function submitEditAddress() {
 async function deleteAddress(id) {
   try {
     await api.delete(`/address/delete/${id}`);
-    ElMessage.success("删除成功");
+    Swal.fire({
+      icon: "success",
+      title: "删除成功",
+      timer: 1000,
+      showConfirmButton: false,
+    });
     loadAddresses();
   } catch {
-    ElMessage.error("删除失败");
+    Swal.fire({
+      icon: "error",
+      title: "删除失败",
+      timer: 1000,
+      showConfirmButton: false,
+    });
   }
 }
 
