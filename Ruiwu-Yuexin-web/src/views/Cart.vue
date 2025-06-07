@@ -12,6 +12,8 @@
       border
       style="width: 100%; margin-top: 20px"
       @selection-change="handleSelectionChange"
+      @row-click="onRowClick"
+      highlight-current-row
     >
       <!-- 多选框 -->
       <el-table-column type="selection" width="55" />
@@ -35,7 +37,11 @@
       </el-table-column>
       <el-table-column label="操作" width="100">
         <template #default="scope">
-          <el-button type="danger" size="small" @click="deleteItem(scope.row)">
+          <el-button
+            type="danger"
+            size="small"
+            @click.stop="deleteItem(scope.row)"
+          >
             删除
           </el-button>
         </template>
@@ -167,7 +173,10 @@ const deleteItem = async (item) => {
     });
   }
 };
-
+const onRowClick = (row) => {
+  // 拿到该行的数据，执行和图片点击同样的逻辑
+  router.push({ path: "/detail", query: { goodId: row.goodId } });
+};
 const handleSelectionChange = (val) => {
   selectedItems.value = val;
 };
