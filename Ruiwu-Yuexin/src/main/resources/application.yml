@@ -22,8 +22,10 @@ spring:
           max-wait: -1ms
 
 mybatis:
+  type-handlers-package: com.gag.RuiwuYuexin.handler
   configuration:
     map-underscore-to-camel-case: true
+
 
 jwt:
   secret: MySuperSecretKey1234567890123456

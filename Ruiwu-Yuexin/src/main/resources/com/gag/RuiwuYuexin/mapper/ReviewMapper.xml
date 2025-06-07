@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gag.RuiwuYuexin.mapper.ReviewMapper">
+
+    <resultMap id="ReviewResultMap" type="com.gag.RuiwuYuexin.entity.Review">
+        <id     property="id"          column="id"/>
+        <result property="userId"      column="user_id"/>
+        <result property="goodId"      column="good_id"/>
+        <result property="rating"      column="rating"/>
+        <result property="content"     column="content"/>
+        <!-- 将 JSON 数组映射成 List<String> -->
+        <result property="images"      column="images" javaType="java.util.List" jdbcType="OTHER"/>
+        <result property="createTime"  column="create_time"/>
+        <result property="updateTime"  column="update_time"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.gag.RuiwuYuexin.entity.Review" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO review
+            (user_id, good_id, rating, content, images, create_time, update_time)
+        VALUES
+            (
+                #{userId},
+                #{goodId},
+                #{rating},
+                #{content},
+                #{images, jdbcType=VARCHAR, typeHandler=com.gag.RuiwuYuexin.handler.JsonListTypeHandler},
+                NOW(),
+                NOW()
+            )
+    </insert>
+
+
+    <select id="selectByGoodId" resultMap="ReviewResultMap" parameterType="int">
+        SELECT id, user_id, good_id, rating, content, images, create_time, update_time
+        FROM review
+        WHERE good_id = #{goodId}
+        ORDER BY create_time DESC
+    </select>
+</mapper>
