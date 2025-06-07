@@ -325,7 +325,7 @@ onMounted(fetchgood);
 }
 .user-info {
   position: absolute;
-  right: -210px;
+  right: -230px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
