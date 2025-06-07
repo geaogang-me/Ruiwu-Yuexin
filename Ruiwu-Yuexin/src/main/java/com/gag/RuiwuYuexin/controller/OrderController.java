@@ -29,4 +29,14 @@ public class OrderController {
         List<OrderDetailDto> list = orderService.getOrderDetailsByUserId(userId);
         return Result.success(list);
     }
+    @PostMapping("/confirmReceipt/{orderId}")
+    public Result<?> confirmReceipt(@PathVariable Long orderId) {
+        boolean success = orderService.confirmReceipt(orderId);
+        if (success) {
+            return Result.success("确认收货成功");
+        } else {
+            return Result.error("确认收货失败");
+        }
+    }
+
 }

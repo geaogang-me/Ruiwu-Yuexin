@@ -46,4 +46,17 @@ public class OrderServiceImpl implements OrderService {
         }
         return items;
     }
+
+    @Override
+    public boolean confirmReceipt(Long orderId) {
+        Order order = orderMapper.selectById(orderId);
+        if (order != null && order.getStatus() == 2) { // 已发货状态才能收货
+            order.setStatus(4); // 4 表示已完成
+            orderMapper.updateById(order);
+            return true;
+        }
+        return false;
+    }
+
+
 }

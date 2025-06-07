@@ -26,4 +26,17 @@ public interface OrderMapper {
     int insertOrder(Order order);
 
     List<OrderDetailDto> getOrderDetailsByUserId(@Param("userId") Long userId);
+
+    /** 根据订单ID查询订单 */
+    @Select("SELECT * FROM orders WHERE id = #{orderId}")
+    Order selectById(@Param("orderId") Long orderId);
+
+    /** 根据订单ID更新订单状态 */
+    @Update("""
+  UPDATE orders
+  SET status = #{status}
+  WHERE id = #{id}
+  """)
+    int updateById(Order order);
+
 }
