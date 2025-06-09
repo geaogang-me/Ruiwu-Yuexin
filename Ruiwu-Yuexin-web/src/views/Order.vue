@@ -13,6 +13,7 @@
         :key="status.name"
         :type="filterStatus === status.name ? 'primary' : 'default'"
         @click="filterStatus = status.name"
+        style="width: 150px"
       >
         {{ status.label }}
       </el-button>
