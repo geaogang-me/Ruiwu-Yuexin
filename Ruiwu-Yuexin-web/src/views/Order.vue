@@ -61,9 +61,9 @@ const filterStatus = ref(null); // 当前筛选的状态
 // 订单状态定义
 const orderStatuses = [
   { name: null, label: "所有订单" },
-  { name: 2, label: "已发货" },
   { name: 1, label: "待发货" },
-  { name: 4, label: "已完成" },
+  { name: 2, label: "已发货" },
+  { name: 3, label: "已完成" },
 ];
 
 const filteredOrders = computed(() => {
@@ -96,13 +96,11 @@ const goBack = () => {
 
 const getOrderStatus = (status) => {
   switch (status) {
-    case 2:
-      return "已发货";
     case 1:
       return "待发货";
     case 2:
-      return "待收货";
-    case 4:
+      return "已发货";
+    case 3:
       return "已完成";
     default:
       return "未知";

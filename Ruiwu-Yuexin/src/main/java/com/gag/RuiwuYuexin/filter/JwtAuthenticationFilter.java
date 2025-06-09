@@ -2,6 +2,7 @@ package com.gag.RuiwuYuexin.filter;
 
 import com.gag.RuiwuYuexin.utils.JwtUtils;
 import com.gag.RuiwuYuexin.utils.ResponseUtils;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -79,6 +80,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
+        } catch (ExpiredJwtException e) {
+            logger.warn("Token 已过期：{}", e);
+            // Token 过期，返回特定错误码，前端统一处理刷新或重新登录
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write(
+                    "{\"code\":\"TOKEN_EXPIRED\",\"msg\":\"Token 已过期，请刷新或重新登录\"}"
+            );
+            return;
         } catch (JwtException e) {
             logger.error("无法解析 Token：", e);
             // Token 异常（例如过期），若是 logout 请求则放行
