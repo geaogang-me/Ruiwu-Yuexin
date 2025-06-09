@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.gag</groupId>
-    <artifactId>Ruiwu-Yuexin</artifactId>
+    <artifactId>RuiwuYuexin</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <properties>
         <java.version>17</java.version>
