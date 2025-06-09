@@ -101,20 +101,26 @@
 </template>
 
 <script setup>
+import { useStore } from "vuex";
 import { ref, reactive, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { useStore } from "vuex";
+
 import api from "@/plugins/axios";
 import Swal from "sweetalert2";
 import OrderDialog from "@/components/OrderDialog.vue";
 import { useAuth } from "@/composables/useAuth";
 
 import { computed } from "vue";
+const store = useStore();
+const token = localStorage.getItem("token");
+const stored = JSON.parse(localStorage.getItem("userInfo") || "null");
+if (token && stored) {
+  store.commit("setLogin", { isLogin: true, userId: stored.id });
+}
 const userInfo = computed(() => store.state.userInfo);
 const { checkTokenValidity, refreshToken } = useAuth();
 const router = useRouter();
 const route = useRoute();
-const store = useStore();
 
 const good = reactive({
   goodName: "",
