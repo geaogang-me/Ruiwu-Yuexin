@@ -121,7 +121,7 @@ const userInfo = computed(() => store.state.userInfo);
 const { checkTokenValidity, refreshToken } = useAuth();
 const router = useRouter();
 const route = useRoute();
-
+const a = 0;
 const good = reactive({
   goodName: "",
   images: [],
