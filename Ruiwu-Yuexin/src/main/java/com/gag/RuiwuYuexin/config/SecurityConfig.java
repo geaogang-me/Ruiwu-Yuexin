@@ -22,10 +22,10 @@ public class SecurityConfig {
                 .cors(cors -> {}) // ✅ 启用跨域支持
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/user/verify-password","/api/user/update","/api/user/info","/api/logout","/api/login",
-                                "/api/register", "/api/good","/api/good/**","api/addToCart","api/list/{userId}","api/cart/delete"
-                                ,"api/cart/count","/api/favorite/add","/api/favorite/remove","/api/favorite/check",
-                                "/api/favorite/list","/api/address/list","api/address/add","api/address/update",
-                                "api/address/delete/{id}","/api/order/create","/api/order/list","/api/token/refresh",
+                                "/api/register", "/api/good","/api/good/**","/api/addToCart","/api/list/{userId}","/api/cart/delete"
+                                ,"/api/cart/count","/api/favorite/add","/api/favorite/remove","/api/favorite/check",
+                                "/api/favorite/list","/api/address/list","/api/address/add","/api/address/update",
+                                "/api/address/delete/{id}","/api/order/create","/api/order/list","/api/token/refresh",
                                 "/api/review/add").permitAll()
                         .anyRequest().authenticated()
                 )
