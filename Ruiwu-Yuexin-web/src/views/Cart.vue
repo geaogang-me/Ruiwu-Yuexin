@@ -347,6 +347,7 @@ onMounted(() => {
 
 .app-title i {
   background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-size: 32px;

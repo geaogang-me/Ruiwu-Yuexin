@@ -167,6 +167,7 @@ onMounted(fetchFavorites);
 
 .app-title i {
   background: linear-gradient(135deg, #ff4d94 0%, #ff7a00 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-size: 32px;
