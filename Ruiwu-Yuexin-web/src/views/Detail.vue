@@ -1,92 +1,94 @@
 <template>
-  <div class="all-container">
-    <!-- 顶部返回 -->
-    <el-page-header title="返回" @back="backToList" content="商品详情">
-      <template #icon>
-        <img
-          src="@/assets/icon/back.png"
-          alt="返回"
-          style="width: 25px; height: 25px; vertical-align: middle"
-        />
-      </template>
-      <template #extra>
-        <div class="cart-block" @click="goToCart">
-          <el-badge :value="cartCount" class="cart-badge">
-            <!-- 用 img 替换内置图标 -->
-            <img
-              src="@/assets/icon/购物车.svg"
-              width="40px"
-              height="40px"
-              alt="购物车"
-              class="cart-img"
-            />
-          </el-badge>
-        </div>
-      </template>
-    </el-page-header>
+  <div class="detail-container">
+    <!-- 顶部标题栏 -->
+    <div class="app-header">
+      <div class="app-title">
+        <i class="fas fa-tag"></i>
+        <h1>商品详情</h1>
+      </div>
+      <el-button type="primary" plain class="back-button" @click="backToList">
+        <i class="fas fa-arrow-left"></i> 返回
+      </el-button>
+    </div>
 
-    <div class="detail-container">
+    <!-- 商品主要内容 -->
+    <div class="product-detail">
+      <!-- 左侧图片展示区 -->
       <div class="image-panel">
-        <!-- 1. 左侧：垂直缩略图 -->
-        <div class="thumbs">
-          <img
+        <!-- 缩略图列表 -->
+        <div class="thumbnails">
+          <div
             v-for="(url, idx) in good.images"
             :key="idx"
-            :src="url"
+            class="thumbnail-container"
             :class="{ active: idx === current }"
-            @mouseenter="selectImage(idx)"
-          />
+            @click="selectImage(idx)"
+          >
+            <img :src="url" alt="商品缩略图" class="thumbnail" />
+          </div>
         </div>
 
-        <!-- 2. 中间：主图 + 蒙版 -->
+        <!-- 主图展示区 -->
         <div
-          class="left"
+          class="main-image-container"
           @mouseenter="enterHandler"
           @mousemove="moveHandler"
           @mouseleave="outHandler"
         >
-          <img class="leftImg" :src="good.images[current]" />
-          <div class="maskTop" v-show="topShow" :style="topStyle"></div>
+          <img :src="good.images[current]" alt="商品主图" class="main-image" />
+          <div class="magnifier" v-show="topShow" :style="topStyle"></div>
         </div>
 
-        <!-- 3. 右侧：放大后的图 -->
-        <div class="right" v-show="rShow">
-          <img class="rightImg" :src="good.images[current]" :style="rStyle" />
+        <!-- 放大图区域 -->
+        <div class="magnified-view" v-show="rShow">
+          <img
+            :src="good.images[current]"
+            class="magnified-image"
+            :style="rStyle"
+          />
         </div>
       </div>
 
-      <!-- 4. 商品信息区 -->
-      <div class="detailInfo">
-        <div class="goodName">
-          <h1 class="goodName">{{ good.goodName }}</h1>
-        </div>
-        <div class="price-box">
-          <div class="price-left">
-            <span class="currency">¥</span
-            ><span class="amount">{{ good.price }}</span>
+      <!-- 右侧商品信息区 -->
+      <div class="product-info">
+        <!-- 商品标题 -->
+        <div class="name-price">
+          <h1 class="product-name">{{ good.goodName }}</h1>
+
+          <!-- 价格区域 -->
+          <div class="price-section">
+            <div class="price-label">价格</div>
+            <div class="price-display">
+              <span class="currency">¥</span>
+              <span class="amount">{{ good.price }}</span>
+            </div>
           </div>
-          <div class="price-right">
-            <img src="@/assets/icon/热门.svg" alt="火" class="fire-icon" />
-          </div>
         </div>
-        <div class="buy-buttons-fixed">
-          <button class="buy-now" @click="handleBuyNow">立即购买</button>
-          <button class="add-cart" @click="addToCart">加入购物车</button>
-          <button class="favorite" @click="toggleFavorite">
-            <img
-              :src="
-                isFavorite
-                  ? require('@/assets/icon/收藏-已收藏.svg')
-                  : require('@/assets/icon/收藏.svg')
-              "
-              alt="收藏"
-              class="icon-svg"
-            />
-          </button>
+
+        <!-- 操作按钮 -->
+        <div class="action-buttons">
+          <el-button type="primary" class="buy-button" @click="handleBuyNow">
+            立即购买
+          </el-button>
+
+          <el-button type="warning" class="cart-button" @click="addToCart">
+            加入购物车
+          </el-button>
+
+          <el-button
+            plain
+            class="favorite-button"
+            :class="{ 'is-favorite': isFavorite }"
+            @click="toggleFavorite"
+          >
+            <i class="fas" :class="isFavorite ? 'fa-heart' : 'fa-heart-o'"></i>
+            {{ isFavorite ? "已收藏" : "收藏" }}
+          </el-button>
         </div>
       </div>
-      <!-- … 这里写你的按钮、价格、描述等 … -->
     </div>
+
+    <!-- 购买对话框 -->
     <OrderDialog
       v-model:visible="orderVisible"
       :good="{
@@ -97,10 +99,18 @@
       }"
       @order-submitted="onOrderSubmitted"
     />
+
+    <!-- 顶部购物车图标 -->
+    <div class="cart-block" @click="goToCart">
+      <el-badge :value="cartCount" class="cart-badge">
+        <i class="fas fa-shopping-cart cart-icon"></i>
+      </el-badge>
+    </div>
   </div>
 </template>
 
 <script setup>
+// ...（保持原有的JavaScript逻辑不变）...
 import { useStore } from "vuex";
 import { ref, reactive, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
@@ -163,8 +173,8 @@ function moveHandler(e) {
   const rect = e.currentTarget.getBoundingClientRect();
   let x = e.clientX - rect.left;
   let y = e.clientY - rect.top;
-  let topX = Math.max(0, Math.min(x - 125, 375));
-  let topY = Math.max(0, Math.min(y - 125, 375));
+  let topX = Math.max(0, Math.min(x - 170, 375));
+  let topY = Math.max(0, Math.min(y - 170, 375));
   topStyle.value = { transform: `translate(${topX}px, ${topY}px)` };
   rStyle.value = { transform: `translate(-${2 * topX}px, -${2 * topY}px)` };
 }
@@ -327,234 +337,346 @@ onMounted(() => {
 });
 </script>
 
-
-
 <style scoped>
 .detail-container {
-  display: flex;
+  padding: 20px;
+  max-width: 1600px;
+  margin: 0 auto;
   position: relative;
-  padding: 20px 20px 20px 70px;
-  gap: 150px;
 }
-.cart-block img {
-  width: 50px; /* 新宽度 */
-  height: 50px; /* 新高度 */
+
+/* 顶部标题栏 */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  padding: 15px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
-.cart-block {
-  position: absolute;
-  right: 40px; /* 相对于 page-header 调整 */
-  top: 5%;
-  transform: translateY(-50%);
-  z-index: 10; /* 提升在最上层，免得被内容遮住 */
-  cursor: pointer;
+
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
-#app {
-  margin-top: 0px;
+
+.app-title h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2c3e50;
 }
-:deep(.el-badge__content.is-fixed) {
-  transform: translateY(-10%) translateX(50%);
-  box-shadow: none;
-  border: none;
+
+.app-title i {
+  background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 32px;
 }
-/* 整体图片区：缩略 + 主 + 放大 横向 */
+
+/* 返回按钮样式 */
+.back-button {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 25px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+  border: 1px solid #eaeef5;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.back-button:hover {
+  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.2);
+  transform: translateY(-2px);
+  color: #3498db;
+}
+
+/* 商品详情主体布局 */
+.product-detail {
+  display: flex;
+  gap: 40px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+  position: relative;
+}
+
+/* 图片展示区 */
 .image-panel {
   display: flex;
-  align-items: flex-start;
   gap: 20px;
-}
-.image-panel .right {
-  position: absolute; /* 脱离文档流，改成绝对定位 */
-  top: 20px; /* 距离 detail-container 顶部 20px（和 padding 保持一致）*/
-  left: calc(45px + 500px + 45px);
-  /* = container 左 padding(20px) + .left 宽度(500px) + 缩略图和主图间隙(20px) */
-  width: 500px;
-  height: 500px;
-  overflow: hidden;
-  z-index: 10; /* 确保覆盖文字 */
-  margin-left: 63; /* 取消原来的 margin-left */
+  width: 55%;
 }
 
-/* 缩略图列表 */
-.thumbs {
+/* 缩略图区域 */
+.thumbnails {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px;
   max-height: 500px;
   overflow-y: auto;
-}
-.thumbs img {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border: 2px solid transparent;
-  cursor: pointer;
-}
-.thumbs img.active {
-  border-color: #ff5000;
+  width: 80px;
+  padding: 5px;
 }
 
-/* 主图区域 */
-.left {
-  position: relative;
-  width: 500px;
-  height: 500px;
+.thumbnail-container {
+  width: 70px;
+  height: 70px;
+  border-radius: 8px;
   overflow: hidden;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
-.leftImg {
+
+.thumbnail-container:hover {
+  transform: scale(1.05);
+}
+
+.thumbnail-container.active {
+  border-color: #3498db;
+}
+
+.thumbnail {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* 小蒙版 */
-.maskTop {
-  position: absolute;
-  width: 250px;
-  height: 250px;
-  background-color: rgba(200, 200, 200, 0.4);
-  pointer-events: none;
-  top: 0;
-  left: 0;
-}
-
-/* 右侧放大图 */
-.right {
+/* 主图区域 */
+.main-image-container {
+  position: relative;
   width: 500px;
   height: 500px;
-  /* position: relative; */
+  border-radius: 12px;
   overflow: hidden;
-  /* z-index: 2; */
-  margin-left: 120px; /* ✅ 原图右边留点距离 */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.rightImg {
-  position: absolute;
-  width: 1000px;
-  height: 1000px;
-  object-fit: cover;
-  top: 0;
-  left: 0;
-}
-
-/* 右侧信息区 */
-.detailInfo {
-  display: flex;
-  flex-direction: column; /* 从横向改为纵向 */
-  align-items: flex-start; /* 左对齐 */
-}
-.goodName {
-  font-size: 20px;
-}
-
-.price-box {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: white;
-  border-radius: 10px;
-  padding: 16px 20px;
-  width: 450px;
-  height: 50px;
-  background: url("@/assets/icon/price-back.jpg") no-repeat center center;
-  background-size: cover;
-}
-
-.price-box .price-left {
-  display: flex;
-}
-.amount {
-  font-size: 1.8em;
-}
-.currency {
-  font-size: 0.9rem; /* 比整体字体略小 */
-  padding-top: 12px;
-  margin-right: 2px; /* 给 ¥ 和金额留点空间 */
-}
-.price-box .price {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.price-box .price-right {
-  display: flex;
-  align-items: center;
-}
-
-.fire-icon {
-  width: 30px;
-  height: 30px;
-  margin-right: 10px;
-  filter: invert(28%) sepia(93%) saturate(7488%) hue-rotate(0deg)
-    brightness(100%) contrast(103%);
-}
-
-.promo .title {
-  font-style: italic;
-  font-weight: bold;
-  font-size: 14px;
-}
-.el-page-header {
-  padding-left: 20px;
-}
-.promo .time {
-  font-size: 12px;
-}
-
-.detail {
-  margin: 20px 0;
+.main-image {
   width: 100%;
-  height: 400px;
-  display: flex; /* ✅ 横向排列 */
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
 }
-/* 固定在右侧底部的按钮区域 */
-.buy-buttons-fixed {
-  margin-top: 310px;
+
+.main-image-container:hover .main-image {
+  transform: scale(1.05);
+}
+
+/* 放大镜效果 */
+.magnifier {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid #ddd;
+  pointer-events: none;
+  cursor: crosshair;
+}
+
+/* 放大图区域 */
+.magnified-view {
+  position: absolute;
+  left: calc(38% + 24px);
+  width: 500px;
+  height: 500px;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid #eee;
+  background: #fff;
+  z-index: 10;
+}
+
+.magnified-image {
+  position: absolute;
+  width: 800px;
+  height: 800px;
+  object-fit: contain;
+}
+
+/* 商品信息区域 */
+.product-info {
+  flex: 1;
   display: flex;
+  flex-direction: column;
+  gap: 260px;
 }
 
-.buy-now {
-  height: 52px;
-  width: 240px;
-  font-size: 16px;
+.product-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1.3;
+}
+
+/* 价格区域 */
+.price-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 0;
+  border-bottom: 1px solid #f1f5f9;
+  border-top: 1px solid #f1f5f9;
+}
+
+.price-label {
+  font-size: 18px;
+  font-weight: 600;
+  color: #7f8c8d;
+}
+
+.price-display {
+  display: flex;
+  align-items: baseline;
+}
+
+.currency {
+  font-size: 22px;
+  font-weight: 600;
+  color: #e74c3c;
+}
+
+.amount {
+  font-size: 32px;
+  font-weight: 700;
+  color: #e74c3c;
+  margin-left: 4px;
+}
+
+/* 操作按钮区域 */
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.buy-button {
+  padding: 12px 35px;
+  font-size: 18px;
+  font-weight: 600;
+  background: linear-gradient(to right, #ff6b6b, #ff8e53);
   border: none;
-  color: #fff;
-  border-radius: 10px 0 0 10px; /* 左圆角 */
-  cursor: pointer;
-  font-weight: bold;
-
-  background: linear-gradient(to right, #ff6600, #ff3300);
+  transition: all 0.3s ease;
 }
 
-.add-cart {
-  height: 52px;
-  width: 240px;
-  font-size: 16px;
+.buy-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 15px rgba(255, 107, 107, 0.4);
+}
+
+.cart-button {
+  padding: 12px 35px;
+  font-size: 18px;
+  font-weight: 600;
+  background: linear-gradient(to right, #3498db, #2c3e50);
   border: none;
-  color: #fff;
-  border-radius: 0 10px 10px 0; /* 右圆角 */
+  transition: all 0.3s ease;
+}
+
+.cart-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 15px rgba(52, 152, 219, 0.4);
+}
+
+.favorite-button {
+  padding: 12px 30px;
+  font-size: 18px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.favorite-button.is-favorite {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  border-color: #e74c3c;
+}
+
+.favorite-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* 购物车图标 */
+.cart-block {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   cursor: pointer;
-  font-weight: bold;
-  background: linear-gradient(to right, #ffcc00, #ff9900);
+  z-index: 1000;
+  transition: all 0.3s ease;
 }
 
-/* 去掉两按钮之间的间距 */
-.buy-now,
-.add-cart {
-  margin: 0;
+.cart-block:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
 }
 
-.icon-svg {
-  width: 30px;
-  height: 30px;
-  vertical-align: middle;
-  margin-right: 4px;
-  padding-left: 10px;
+.cart-icon {
+  font-size: 28px;
+  color: #3498db;
 }
 
-/* 去掉收藏按钮的边框和背景 */
-.favorite {
-  border: none !important;
-  background: none !important;
-  padding: 0;
+:deep(.el-badge__content) {
+  transform: translate(50%, -50%);
+}
+
+/* 响应式设计 */
+@media (max-width: 992px) {
+  .product-detail {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .image-panel {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .magnified-view {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .image-panel {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .thumbnails {
+    flex-direction: row;
+    max-height: 80px;
+    width: 100%;
+    overflow-x: auto;
+    padding: 10px 0;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .buy-button,
+  .cart-button,
+  .favorite-button {
+    width: 100%;
+  }
 }
 </style>

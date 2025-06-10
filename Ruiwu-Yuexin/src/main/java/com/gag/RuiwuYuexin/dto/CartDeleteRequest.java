@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class CartDeleteRequest {
     private Long userId;
-    private Long goodId; // 或使用 goodId 更稳定
+    private Long id; // 或使用 goodId 更稳定
 }

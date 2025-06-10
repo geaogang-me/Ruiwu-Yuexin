@@ -15,7 +15,7 @@ public interface CartMapper  {
     void addToCart(Cart cart);
     List<CartItemDTO> selectByUserId(Long userId);
 
-    int deleteByUserIdAndGoodId(@Param("userId") Long userId, @Param("goodId") Long goodId);
+    int deleteByUserIdAndId(@Param("userId") Long userId, @Param("id") Long id);
 
     @Select("SELECT IFNULL(SUM(num), 0) FROM cart WHERE user_id = #{userId}")
     int getCartCountByUserId(@Param("userId") Long userId);

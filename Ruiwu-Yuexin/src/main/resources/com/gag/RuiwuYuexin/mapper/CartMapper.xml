@@ -14,6 +14,7 @@
 
     <!-- 联表查询返回DTO对象的映射 -->
     <resultMap id="CartItemResultMap" type="com.gag.RuiwuYuexin.dto.CartItemDTO">
+        <id     property="id"       column="id"/>
         <result property="num"        column="num"/>
         <result property="goodName"   column="good_name"/>
         <result property="goodImage"  column="good_image"/>
@@ -27,6 +28,7 @@
 
     <select id="selectByUserId" resultMap="CartItemResultMap">
         SELECT
+        c.id,
         c.num,
         c.good_id,
         g.good_name,
@@ -36,7 +38,7 @@
         INNER JOIN goods g ON c.good_id = g.id
         WHERE c.user_id = #{userId}
     </select>
-    <delete id="deleteByUserIdAndGoodId">
-        DELETE FROM cart WHERE user_id = #{userId} AND good_id = #{goodId}
+    <delete id="deleteByUserIdAndId">
+        DELETE FROM cart WHERE user_id = #{userId} AND id = #{id}
     </delete>
 </mapper>

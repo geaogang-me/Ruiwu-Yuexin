@@ -29,8 +29,8 @@ public class CartServiceImpl implements CartService {
         }
         return items;
     }
-    public boolean deleteItemByGoodId(Long userId, Long goodId) {
-        return cartMapper.deleteByUserIdAndGoodId(userId, goodId) > 0;
+    public boolean deleteItemById(Long userId, Long id) {
+        return cartMapper.deleteByUserIdAndId(userId, id) > 0;
     }
 
     @Override

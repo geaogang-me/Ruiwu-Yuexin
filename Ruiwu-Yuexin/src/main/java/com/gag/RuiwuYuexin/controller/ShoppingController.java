@@ -52,7 +52,7 @@ public class ShoppingController {
     }
     @DeleteMapping("/cart/delete")
     public Result<?> deleteFromCart(@RequestBody CartDeleteRequest request) {
-        boolean success = cartService.deleteItemByGoodId(request.getUserId(), request.getGoodId());
+        boolean success = cartService.deleteItemById(request.getUserId(), request.getId());
         return success ? Result.success() : Result.error("删除失败");
     }
     @GetMapping("cart/count")

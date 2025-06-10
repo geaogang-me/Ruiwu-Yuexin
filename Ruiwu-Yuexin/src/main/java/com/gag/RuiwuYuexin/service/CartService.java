@@ -11,6 +11,6 @@ public interface CartService {
      void addToCart(Cart cart);
      List<CartItemDTO> getCartByUserId(Long userId);
 
-     boolean deleteItemByGoodId(Long userId, Long goodId);
+     boolean deleteItemById(Long userId, Long Id);
      int getCartCount(Long userId);
 }

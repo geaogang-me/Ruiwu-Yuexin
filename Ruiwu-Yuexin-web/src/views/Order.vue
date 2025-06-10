@@ -298,7 +298,7 @@ onUnmounted(() => {
 }
 .orders-list-container {
   max-height: calc(100vh - 250px);
-  overflow-y: auto;
+  overflow-y: scroll;
   scrollbar-width: thin;
   scrollbar-color: rgba(128, 128, 128, 0.5) transparent;
   scroll-behavior: smooth;
@@ -320,15 +320,7 @@ onUnmounted(() => {
 }
 
 /* 调整空状态的高度 */
-.empty-state {
-  height: 100%;
 
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 40px 20px;
-}
 .app-header {
   display: flex;
   align-items: center;
