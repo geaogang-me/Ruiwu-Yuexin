@@ -130,7 +130,7 @@ const goBack = () => {
 };
 
 const goToGoodsList = () => {
-  router.push({ path: "/goods" });
+  router.push({ path: "/home" });
 };
 
 onMounted(fetchFavorites);

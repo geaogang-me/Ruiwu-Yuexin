@@ -302,7 +302,7 @@ const goToDetail = (goodId) => {
 };
 
 const goToGoodsList = () => {
-  router.push({ path: "/goods" });
+  router.push({ path: "/home" });
 };
 
 const goBack = () => {
