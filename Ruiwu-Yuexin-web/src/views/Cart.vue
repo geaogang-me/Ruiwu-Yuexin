@@ -149,6 +149,7 @@ import Swal from "sweetalert2";
 import { ArrowLeft } from "@element-plus/icons-vue";
 import { useStore } from "vuex";
 import { ElMessage } from "element-plus";
+import { onUnmounted } from "vue";
 
 // 响应式数据
 const cartItems = ref([]);
@@ -310,8 +311,26 @@ const goBack = () => {
 
 onMounted(() => {
   fetchCart();
-  document.body.style.overflow = "hidden";
+  window.addEventListener("wheel", handleScroll, { passive: false });
 });
+onUnmounted(() => {
+  // 清理事件监听器
+  window.removeEventListener("wheel", handleScroll);
+  restoreOverflow();
+});
+
+function restoreOverflow() {
+  document.documentElement.style.overflow = "";
+  document.body.style.overflow = "";
+}
+
+function handleScroll(e) {
+  // 仅在滚动时启用滚动
+  restoreOverflow();
+
+  // 防止无限触发
+  window.removeEventListener("wheel", handleScroll);
+}
 </script>
 
 <style scoped>
