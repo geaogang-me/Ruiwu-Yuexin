@@ -110,7 +110,6 @@
 </template>
 
 <script setup>
-// ...（保持原有的JavaScript逻辑不变）...
 import { useStore } from "vuex";
 import { ref, reactive, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
@@ -148,36 +147,69 @@ const orderVisible = ref(false);
 function backToList() {
   router.back();
 }
-// 新增：处理“立即购买”按钮
+
 function handleBuyNow() {
-  // 先检查 token
   if (!checkTokenValidity()) return;
-  // token 有效，就显示下单弹窗
   orderVisible.value = true;
 }
+
 function onOrderSubmitted() {
   router.push({ path: "/orders" });
 }
+
 function goToCart() {
   if (!checkTokenValidity()) return;
   router.push({ path: "/cart" });
 }
+
 function selectImage(idx) {
   current.value = idx;
 }
+
 function enterHandler() {
   topShow.value = true;
   rShow.value = true;
 }
+
 function moveHandler(e) {
   const rect = e.currentTarget.getBoundingClientRect();
+  const magnifierSize = 150; // 放大镜尺寸
+  const magnifierHalf = magnifierSize / 2;
+
+  // 动态获取主图容器的实际宽度和高度
+  const containerWidth = rect.width;
+  const containerHeight = rect.height;
+
+  // 计算鼠标在容器中的相对位置
   let x = e.clientX - rect.left;
   let y = e.clientY - rect.top;
-  let topX = Math.max(0, Math.min(x - 170, 375));
-  let topY = Math.max(0, Math.min(y - 170, 375));
-  topStyle.value = { transform: `translate(${topX}px, ${topY}px)` };
-  rStyle.value = { transform: `translate(-${2 * topX}px, -${2 * topY}px)` };
+
+  // 计算放大镜左上角的坐标，确保在容器边界内
+  let topX = Math.max(
+    0,
+    Math.min(x - magnifierHalf, containerWidth - magnifierSize)
+  );
+  let topY = Math.max(
+    0,
+    Math.min(y - magnifierHalf, containerHeight - magnifierSize)
+  );
+
+  // 计算放大镜位置
+  topStyle.value = {
+    transform: `translate(${topX}px, ${topY}px)`,
+    width: `${magnifierSize}px`,
+    height: `${magnifierSize}px`,
+  };
+
+  // 计算放大图像的位置（按比例计算偏移）
+  const zoomLevel = 2.2; // 放大倍数
+  rStyle.value = {
+    transform: `translate(-${zoomLevel * topX}px, -${zoomLevel * topY}px)`,
+    width: `${zoomLevel * containerWidth}px`,
+    height: `${zoomLevel * containerHeight}px`,
+  };
 }
+
 function outHandler() {
   topShow.value = false;
   rShow.value = false;
@@ -340,7 +372,7 @@ onMounted(() => {
 <style scoped>
 .detail-container {
   padding: 20px;
-  max-width: 1600px;
+  max-width: 1300px;
   margin: 0 auto;
   position: relative;
 }
@@ -415,7 +447,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  max-height: 500px;
+  max-height: 375px;
   overflow-y: auto;
   width: 80px;
   padding: 5px;
@@ -448,8 +480,8 @@ onMounted(() => {
 /* 主图区域 */
 .main-image-container {
   position: relative;
-  width: 500px;
-  height: 500px;
+  width: 375px;
+  height: 375px;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -469,20 +501,22 @@ onMounted(() => {
 /* 放大镜效果 */
 .magnifier {
   position: absolute;
-  width: 150px;
-  height: 150px;
   background: rgba(255, 255, 255, 0.3);
   border: 1px solid #ddd;
   pointer-events: none;
   cursor: crosshair;
+  left: 0;
+  top: 0;
+  z-index: 10;
 }
 
 /* 放大图区域 */
 .magnified-view {
   position: absolute;
-  left: calc(38% + 24px);
-  width: 500px;
-  height: 500px;
+  left: calc(38% + 12px); /* 主图右边留空 */
+  top: 20;
+  width: 375px;
+  height: 375px;
   overflow: hidden;
   border-radius: 12px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
@@ -493,8 +527,8 @@ onMounted(() => {
 
 .magnified-image {
   position: absolute;
-  width: 800px;
-  height: 800px;
+  top: 0;
+  left: 0;
   object-fit: contain;
 }
 
@@ -503,11 +537,17 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 260px;
+  justify-content: space-between; /* 两端对齐 */
+}
+
+.name-price {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .product-name {
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 700;
   color: #2c3e50;
   line-height: 1.3;
@@ -518,9 +558,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 15px;
-  padding: 15px 0;
-  border-bottom: 1px solid #f1f5f9;
-  border-top: 1px solid #f1f5f9;
+  padding: 5px 0;
 }
 
 .price-label {
@@ -541,7 +579,7 @@ onMounted(() => {
 }
 
 .amount {
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 700;
   color: #e74c3c;
   margin-left: 4px;
@@ -552,7 +590,7 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
-  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .buy-button {
@@ -606,14 +644,14 @@ onMounted(() => {
   position: fixed;
   top: 30px;
   right: 30px;
-  width: 60px;
-  height: 60px;
+  width: 45px;
+  height: 45px;
   background: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   z-index: 1000;
   transition: all 0.3s ease;
@@ -625,7 +663,7 @@ onMounted(() => {
 }
 
 .cart-icon {
-  font-size: 28px;
+  font-size: 25px;
   color: #3498db;
 }
 
@@ -647,6 +685,10 @@ onMounted(() => {
 
   .magnified-view {
     display: none;
+  }
+
+  .product-info {
+    gap: 30px;
   }
 }
 
