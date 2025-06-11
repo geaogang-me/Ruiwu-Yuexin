@@ -170,6 +170,7 @@ export default {
       form.username = "";
       form.password = "";
       form.captcha = "";
+      router.push("/home");
     };
 
     const handleRegister = () => {

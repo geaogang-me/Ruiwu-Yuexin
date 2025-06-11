@@ -53,6 +53,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
         String uri = request.getRequestURI();
+        // 跳过登录、注册、登出等不需要认证的请求
+        if (uri.contains("/api/login") ||
+                uri.contains("/api/register") ||
+                uri.contains("/api/logout")) {
+
+            filterChain.doFilter(request, response);
+            return;
+        }
         try {
             String jwt = parseJwt(request);
             if (jwt != null) {

@@ -20,7 +20,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {}) // ✅ 启用跨域支持
-                .authorizeHttpRequests(auth -> auth
+                   .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/user/verify-password","/api/user/update","/api/user/info","/api/logout","/api/login",
                                 "/api/register", "/api/good","/api/good/**","/api/addToCart","/api/list/{userId}","/api/cart/delete"
                                 ,"/api/cart/count","/api/favorite/add","/api/favorite/remove","/api/favorite/check",

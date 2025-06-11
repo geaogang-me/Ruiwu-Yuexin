@@ -29,7 +29,7 @@ mybatis:
 
 jwt:
   secret: MySuperSecretKey1234567890123456
-  expiration: 3600000
+  expiration: 360000
 
 logging:
   level:

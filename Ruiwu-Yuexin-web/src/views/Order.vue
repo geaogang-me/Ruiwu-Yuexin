@@ -494,9 +494,9 @@ onUnmounted(() => {
   animation: fadeIn 0.5s ease forwards;
 }
 
-.order-card.new-item {
+/* .order-card.new-item {
   animation: highlight 1.5s ease;
-}
+} */
 
 @keyframes fadeIn {
   from {
