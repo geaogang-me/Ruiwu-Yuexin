@@ -31,7 +31,7 @@ api.interceptors.response.use(
       Swal.fire({
         icon: 'error',
         title: '登录过期',
-        text: '请求失败！！！登录已过期，请重新登录',
+        text: '请求失败！登录已过期，请重新登录',
         showCloseButton: false,
         confirmButtonText: '确定',
         customClass: {
