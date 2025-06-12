@@ -621,7 +621,7 @@ onMounted(fetchgood);
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
-  padding: 15px;
+  padding: 1px;
   transition: all 0.3s ease;
   cursor: pointer;
   opacity: 0;
@@ -647,7 +647,7 @@ onMounted(fetchgood);
 }
 
 .image-container {
-  height: 200px;
+  height: 240px;
   display: flex;
   justify-content: center;
   align-items: center;
