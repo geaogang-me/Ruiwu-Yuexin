@@ -50,7 +50,7 @@
       <div class="right-actions">
         <div class="action-blocks">
           <div class="action-item" @click="goToFavorite">
-            <img src="@/assets/icon/收藏home.svg" alt="收藏" />
+            <img src="@/assets/icon/喜欢.svg" alt="收藏" />
           </div>
           <div class="action-item" @click="goToCart">
             <el-badge :value="cartCount" class="cart-badge">
@@ -315,12 +315,15 @@ onMounted(fetchgood);
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  overflow: hidden;
   font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 /* 顶部标题样式 */
 .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100; /* 保证它们在最上层 */
+  background: #fff; /* 背景色，防止滚动内容透出 */
   display: flex;
   align-items: center;
   margin-bottom: 2px;
@@ -350,10 +353,13 @@ onMounted(fetchgood);
 
 /* 搜索栏样式 */
 .search-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100; /* 保证它们在最上层 */
+  background: #fff; /* 背景色，防止滚动内容透出 */
   width: 100%;
   height: 64px;
   padding: 2px;
-  background: #fff;
   border-radius: 16px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
   margin-bottom: 24px;
