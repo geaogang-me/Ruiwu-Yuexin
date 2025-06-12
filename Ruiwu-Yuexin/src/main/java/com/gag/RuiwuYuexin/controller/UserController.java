@@ -8,6 +8,7 @@ import com.gag.RuiwuYuexin.utils.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
@@ -65,6 +66,56 @@ public class UserController {
         }
 
         return Result.success("原密码正确");
+    }
+    @PostMapping("/user/change-password")
+    public Result changePassword(@RequestBody Map<String, String> requestBody, HttpServletRequest request) {
+        try {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return Result.error("缺少或格式错误的 Authorization 头");
+            }
+
+            String token = authHeader.replace("Bearer ", "");
+            Long userId = jwtUtils.getUserIdFromToken(token);
+
+            User user = userService.findById(userId);
+            if (user == null) {
+                return Result.error("用户不存在");
+            }
+
+            // 提取请求参数
+            String oldPassword = requestBody.get("oldPassword");
+            String newPassword = requestBody.get("newPassword");
+
+            if (oldPassword == null || oldPassword.isEmpty()) {
+                return Result.error("请提供原密码");
+            }
+
+            if (newPassword == null || newPassword.isEmpty()) {
+                return Result.error("请提供新密码");
+            }
+
+            // 验证原密码是否正确
+            if (!user.getPassword().equals(oldPassword)) {
+                return Result.error("原密码错误");
+            }
+
+            // 验证新密码强度
+            if (newPassword.length() < 6) {
+                return Result.error("密码长度至少需要6个字符");
+            }
+
+            // 更新密码
+            user.setPassword(newPassword);
+
+            userService.updateUser(user);
+
+            return Result.success("密码更新成功");
+        } catch (DataAccessException e) {
+            return Result.error("数据库错误: " + e.getMessage());
+        } catch (Exception e) {
+            return Result.error("密码更新失败: " + e.getMessage());
+        }
     }
     @PutMapping("/user/update")
     public Result updateUser(@RequestBody UserDTO userDTO, HttpServletRequest request) {
