@@ -227,7 +227,7 @@ async function addToCart() {
       num: 1,
     };
     const response = await api.post("/addToCart", cartItem, {
-      headers: { Authorization: `Bearer ${userInfo.value.token}` },
+      //headers: { Authorization: `Bearer ${userInfo.value.token}` },
     });
     if (response.data.code === "200") {
       Swal.fire({
@@ -506,7 +506,7 @@ onMounted(() => {
 .magnified-view {
   position: absolute;
   left: calc(38% + 12px); /* 主图右边留空 */
-  top: 20;
+  top: 20px;
   width: 375px;
   height: 375px;
   overflow: hidden;
@@ -657,10 +657,6 @@ onMounted(() => {
 .cart-icon {
   font-size: 25px;
   color: #3498db;
-}
-
-:deep(.el-badge__content) {
-  transform: translate(50%, -50%);
 }
 
 /* 响应式设计 */

@@ -2,14 +2,9 @@ import { createStore } from 'vuex';
 
 export default createStore({
   state: {
-    // 用户信息
-    userInfo: JSON.parse(localStorage.getItem('userInfo') || 'null'),
-    // 登录状态
-    isLogin: !!localStorage.getItem('token'),
-    // 用户 Token
+    userInfo: JSON.parse(localStorage.getItem('userInfo') || '{}'),
     token: localStorage.getItem('token') || null,
-    userId: null,
-  cartCount: 0,
+    cartCount: 0,
   },
   mutations: {
     // 更新用户信息
@@ -51,11 +46,11 @@ export default createStore({
   getters: {
     
     // 获取用户 ID
-    userId: (state) => state.userInfo?.id || state.userId,
+    userId: state => state.userInfo?.id || null,
     // 获取用户信息
     userInfo: (state) => state.userInfo,
     // 获取登录状态
-    isLogin: (state) => state.isLogin,
+    isLogin: state => !!state.token,
     // 获取 Token
     token: (state) => state.token,
   },

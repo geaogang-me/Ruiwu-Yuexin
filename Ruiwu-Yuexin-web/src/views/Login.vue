@@ -69,20 +69,6 @@ import debounce from "lodash/debounce";
 import api from "@/plugins/axios";
 import { useStore } from "vuex"; // 引入 useStore
 
-// 请求拦截器：为每个请求添加 Authorization 头
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token"); // 从 localStorage 获取 token
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
 export default {
   setup() {
     const form = reactive({
