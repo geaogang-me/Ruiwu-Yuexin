@@ -4,6 +4,7 @@
     @update:model-value="(v) => emit('update:visible', v)"
     :close-on-click-modal="false"
     class="order-dialog"
+    top="5vh"
   >
     <!-- 对话框头部 - 匹配主界面风格 -->
     <div class="dialog-header">
@@ -688,7 +689,7 @@ watch(
   border-bottom: none;
 }
 
-.image-wrapper {
+.cart-order-item .image-wrapper {
   width: 80px;
   height: 80px;
   display: flex;
@@ -714,7 +715,11 @@ watch(
   justify-content: center;
   color: #aaa;
 }
-
+.good-card .image-wrapper {
+  width: 120px;
+  height: 120px;
+  margin-right: 20px;
+}
 .image-placeholder i {
   font-size: 24px;
 }
@@ -863,6 +868,7 @@ watch(
   font-size: 18px;
   font-weight: 700;
   color: #2c3e50;
+  margin-top: 15px;
   margin-bottom: 15px;
 }
 
@@ -897,8 +903,7 @@ watch(
 .summary-card {
   background: #fff;
   border-radius: 12px;
-  padding: 20px;
-  margin-top: 20px;
+  padding: 15px;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: flex-end;
