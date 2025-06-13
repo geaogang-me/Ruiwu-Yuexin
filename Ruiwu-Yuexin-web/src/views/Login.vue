@@ -135,13 +135,14 @@ export default {
 
         if (response.data.code === "200") {
           // 保存 JWT Token 到 localStorage
-          localStorage.setItem("token", response.data.data.token);
-          localStorage.setItem("userInfo", JSON.stringify(response.data.data));
+          const userData = response.data.data;
 
-          // 使用 store.commit 更新 Vuex 状态
+          // 统一通过 Vuex 更新状态
+          store.commit("updateToken", userData.token);
+          store.commit("updateUserInfo", userData);
           store.commit("setLogin", {
             isLogin: true,
-            userId: response.data.data.id,
+            userId: userData.id,
           });
 
           Swal.fire({
