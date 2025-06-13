@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../views/Login.vue';
 import Register from '../views/Register.vue';
 import Home from '../views/Home.vue';
-
+import Payment from '../views/Payment.vue'
 
 // 配置路由规则
 const routes = [
@@ -51,8 +51,12 @@ const routes = [
     path: '/inform',
     name: 'Inform',
     component: () => import('../components/main/Inform.vue')
-  }
-  
+  },
+  {
+    path: '/payment',
+    name: 'Payment',
+    component: () => import('../views/Payment.vue')
+  } 
 ];
 
 

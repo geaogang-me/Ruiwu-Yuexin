@@ -115,7 +115,7 @@
         <el-button
           type="success"
           class="checkout-button"
-          @click="checkout"
+          @click="openOrderDialog"
           :disabled="selectedItems.length === 0"
         >
           结算
@@ -125,19 +125,11 @@
     </div>
 
     <!-- 支付对话框 -->
-    <el-dialog
-      v-model="showQrDialog"
-      title="扫码支付"
-      width="300px"
-      :close-on-click-modal="false"
-      align-center
-    >
-      <div style="text-align: center">
-        <img :src="qrCodeUrl" alt="扫码支付" class="qr-code" />
-        <div class="payment-amount">支付金额: ¥{{ totalSelectedPrice }}</div>
-        <p style="margin-top: 10px">请使用支付宝扫描二维码支付</p>
-      </div>
-    </el-dialog>
+    <OrderDialog
+      v-model:visible="orderVisible"
+      :cart-items="selectedItems"
+      @order-submitted="onOrderSubmitted"
+    />
   </div>
 </template>
 
@@ -150,13 +142,13 @@ import { ArrowLeft } from "@element-plus/icons-vue";
 import { useStore } from "vuex";
 import { ElMessage } from "element-plus";
 import { onUnmounted } from "vue";
+import OrderDialog from "@/components/OrderDialog.vue";
 
 // 响应式数据
 const cartItems = ref([]);
 const selectedItemIds = ref([]);
 const loading = ref(false);
-const showQrDialog = ref(false);
-const qrCodeUrl = require("@/assets/qrcode.png");
+const orderVisible = ref(false);
 
 // 工具函数与方法
 const router = useRouter();
@@ -168,6 +160,18 @@ const selectedItems = computed(() => {
     selectedItemIds.value.includes(item.goodId)
   );
 });
+
+// const firstSelectedGood = computed(() => {
+//   // 确保至少有一个选中商品时才返回对象
+//   return selectedItems.value.length > 0
+//     ? {
+//         id: selectedItems.value[0].goodId,
+//         name: selectedItems.value[0].goodName,
+//         price: selectedItems.value[0].price,
+//         image: "data:image/jpeg;base64," + selectedItems.value[0].goodImage,
+//       }
+//     : null; // 无商品时返回null
+// });
 
 const totalSelectedPrice = computed(() => {
   return selectedItems.value.reduce((sum, item) => {
@@ -221,27 +225,31 @@ const fetchCart = async () => {
 const deleteItem = async (item) => {
   try {
     const res = await api.delete(`/cart/delete`, {
-      data: {
-        userId: store.state.userId,
-        id: item.id,
-      },
+      data: { userId: store.state.userId, id: item.id },
     });
-
     if (res.data.code === "200") {
       ElMessage.success("删除成功");
 
-      // 添加删除动画
       const index = cartItems.value.findIndex((i) => i.goodId === item.goodId);
       if (index !== -1) {
-        const card = document.querySelectorAll(".cart-item-card")[index];
-        card.style.height = card.offsetHeight + "px";
-        card.style.opacity = 0;
-        card.style.transform = "translateX(100%)";
-
-        setTimeout(() => {
+        // 拿到所有卡片节点
+        const cards = document.querySelectorAll(".cart-item-card");
+        const card = cards[index];
+        if (card) {
+          // 做动画
+          card.style.height = card.offsetHeight + "px";
+          card.style.opacity = 0;
+          card.style.transform = "translateX(100%)";
+          // 等动画完再删除数组
+          setTimeout(() => {
+            cartItems.value.splice(index, 1);
+            store.commit("setCartCount", cartItems.value.length);
+          }, 300);
+        } else {
+          // 如果找不到对应 card，就直接删数据
           cartItems.value.splice(index, 1);
           store.commit("setCartCount", cartItems.value.length);
-        }, 300);
+        }
       }
     } else {
       ElMessage.error(`删除失败：${res.data.msg}`);
@@ -279,22 +287,27 @@ const deleteSelectedItems = () => {
 
   selectedItemIds.value = [];
 };
+// 打开订单对话框（与详情页保持一致）
+const openOrderDialog = () => {
+  if (selectedItems.value.length === 0) {
+    ElMessage.warning("请至少选择一个商品");
+    return;
+  }
+  orderVisible.value = true;
+};
+const onOrderSubmitted = async () => {
+  if (selectedItems.value.length === 0) return;
 
-const checkout = () => {
-  const goods = selectedItems.value;
+  // 先关闭弹窗
+  orderVisible.value = false;
 
-  Swal.fire({
-    icon: "success",
-    title: `准备结算 ${goods.length} 件商品`,
-    text: `总金额: ¥${totalSelectedPrice.value}`,
-    timer: 2000,
-    showConfirmButton: false,
-  });
+  // 顺序删除，保证每次动画/DOM 更新完再删下一条
+  for (const item of selectedItems.value) {
+    await deleteItem(item);
+  }
 
-  // 显示支付对话框
-  setTimeout(() => {
-    showQrDialog.value = true;
-  }, 1500);
+  // 清空选中
+  selectedItemIds.value = [];
 };
 
 const goToDetail = (goodId) => {

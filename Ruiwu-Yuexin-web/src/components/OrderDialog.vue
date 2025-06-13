@@ -50,37 +50,104 @@
     <el-divider class="custom-divider" />
 
     <!-- 下半部分：商品信息 - 使用卡片样式 -->
-    <div class="good-section">
-      <div class="good-card">
-        <img :src="good.image" class="good-image" alt="商品图" />
-        <div class="good-info">
-          <h4>{{ good.name }}</h4>
-          <div class="good-details">
-            <div class="price-info">
-              <span class="label">单价：</span>
-              <span class="value">¥{{ good.price }}</span>
-            </div>
-            <div class="quantity-selector">
-              <span class="label">数量：</span>
-              <el-input-number
-                v-model="quantity"
-                :min="1"
-                :max="100"
-                @change="onQtyChange"
-                controls-position="right"
-                class="quantity-input"
+    <div class="good-section" v-if="displayGoods">
+      <!-- 多商品模式 -->
+      <div v-if="multipleGoods" class="multiple-goods-container">
+        <div class="cart-items-list">
+          <div
+            v-for="(item, index) in cartItems"
+            :key="index"
+            class="cart-order-item"
+          >
+            <!-- 商品图片 -->
+            <div class="image-wrapper">
+              <img
+                v-if="item.goodImage"
+                :src="'data:image/jpeg;base64,' + item.goodImage"
+                class="cart-order-item-image"
+                alt="商品图"
               />
+              <div v-else class="image-placeholder">
+                <i class="fas fa-image"></i>
+              </div>
             </div>
+
+            <!-- 商品信息 -->
+            <div class="cart-order-item-info">
+              <h4>{{ item.goodName }}</h4>
+              <div class="cart-order-item-details">
+                <div>
+                  <span class="label">单价：</span>
+                  <span class="value">¥{{ item.price }}</span>
+                </div>
+                <div>
+                  <span class="label">数量：</span>
+                  <span class="value">{{ item.num }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 小计 -->
+            <div class="cart-order-item-total">
+              ¥{{ (item.price * item.num).toFixed(2) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 总价 -->
+        <div class="summary-card">
+          <div class="total-amount">
+            <span class="label">订单总额：</span>
+            <span class="value">¥{{ cartTotalAmount.toFixed(2) }}</span>
           </div>
         </div>
       </div>
 
-      <div class="summary-card">
-        <div class="total-amount">
-          <span class="label">订单总额：</span>
-          <span class="value">¥{{ totalAmount.toFixed(2) }}</span>
+      <!-- 单商品模式 -->
+      <div v-else>
+        <!-- 安全处理单商品信息 -->
+        <div class="good-card" v-if="good">
+          <div class="image-wrapper">
+            <img :src="good.image" class="good-image" alt="商品图" />
+          </div>
+          <div class="good-info">
+            <h4>{{ good.name }}</h4>
+            <div class="good-details">
+              <div class="price-info">
+                <span class="label">单价：</span>
+                <span class="value">¥{{ good.price }}</span>
+              </div>
+              <div class="quantity-selector">
+                <span class="label">数量：</span>
+                <el-input-number
+                  v-model="quantity"
+                  :min="1"
+                  :max="100"
+                  @change="onQtyChange"
+                  controls-position="right"
+                  class="quantity-input"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 单商品模式总价 -->
+        <div class="summary-card">
+          <div class="total-amount">
+            <span class="label">订单总额：</span>
+            <span class="value"
+              >¥{{ (good ? good.price * quantity : 0).toFixed(2) }}</span
+            >
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- 无商品提示 -->
+    <div v-else class="no-goods-message">
+      <i class="fas fa-exclamation-circle"></i>
+      <p>无法获取商品信息</p>
     </div>
 
     <template #footer>
@@ -260,9 +327,29 @@ const props = defineProps({
   visible: Boolean,
   good: {
     type: Object,
-    required: true,
+    required: false, // 改为非必需
+    default: null,
+  },
+  cartItems: {
+    // 新添加的多商品属性
+    type: Array,
+    default: () => [],
   },
 });
+const displayGoods = computed(() => {
+  return props.cartItems.length > 0 || (props.good && props.good.id);
+});
+
+const multipleGoods = computed(() => {
+  return props.cartItems.length > 0;
+});
+
+const cartTotalAmount = computed(() => {
+  return props.cartItems.reduce((total, item) => {
+    return total + item.price * item.num;
+  }, 0);
+});
+const quantity = ref(1);
 
 const showAddDialog = ref(false);
 const addrForm = ref(null);
@@ -289,7 +376,6 @@ const editAddr = ref({});
 const editAddrForm = ref(null);
 const addresses = ref([]);
 const selectedAddressId = ref(null);
-const quantity = ref(1);
 
 async function loadAddresses() {
   try {
@@ -355,31 +441,77 @@ async function submitOrder() {
     });
     return;
   }
-  const payload = {
-    userId: JSON.parse(localStorage.getItem("userInfo"))?.id,
-    goodId: props.good.id,
-    addressId: selectedAddressId.value,
-    quantity: quantity.value,
-  };
+
+  const userId = JSON.parse(localStorage.getItem("userInfo"))?.id;
+
   try {
-    const res = await api.post("/order/create", payload);
-    if (res.data.code === "200") {
-      Swal.fire({
-        icon: "success",
-        title: "订单提交成功",
-        timer: 1000,
-        showConfirmButton: false,
+    // 多个商品处理
+    if (props.cartItems.length > 0) {
+      const promises = props.cartItems.map((item) => {
+        const payload = {
+          userId,
+          goodId: item.goodId,
+          addressId: selectedAddressId.value,
+          quantity: item.num,
+        };
+        return api.post("/order/create", payload);
       });
-      emit("order-submitted");
-      emit("update:visible", false);
-      router.push("/order");
-    } else {
-      Swal.fire({
-        icon: "error",
-        title: res.data.msg || "提交失败",
-        timer: 1000,
-        showConfirmButton: false,
-      });
+
+      const results = await Promise.all(promises);
+      const allSuccess = results.every((res) => res.data.code === "200");
+
+      if (allSuccess) {
+        Swal.fire({
+          icon: "success",
+          title: "订单提交成功",
+          timer: 1000,
+          showConfirmButton: false,
+        });
+        emit("order-submitted");
+        emit("update:visible", false);
+        router.push("/payment");
+      } else {
+        const errorMessages = results
+          .filter((res) => res.data.code !== "200")
+          .map((res) => res.data.msg)
+          .join(", ");
+
+        Swal.fire({
+          icon: "error",
+          title: "部分订单提交失败",
+          text: errorMessages || "未知错误",
+          timer: 2000,
+        });
+      }
+    }
+    // 单个商品处理
+    else if (props.good) {
+      const payload = {
+        userId,
+        goodId: props.good.id,
+        addressId: selectedAddressId.value,
+        quantity: quantity.value,
+      };
+
+      const res = await api.post("/order/create", payload);
+      if (res.data.code === "200") {
+        Swal.fire({
+          icon: "success",
+          title: "订单提交成功",
+          timer: 1000,
+          showConfirmButton: false,
+        });
+        emit("order-submitted");
+        emit("update:visible", false);
+        router.push("/payment");
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: res.data.msg || "提交失败",
+          timer: 1000,
+          showConfirmButton: false,
+        });
+      }
     }
   } catch {
     Swal.fire({
@@ -531,7 +663,102 @@ watch(
   overflow: hidden;
   box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
 }
+.multiple-goods-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
+.cart-items-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.cart-order-item {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.cart-order-item:last-child {
+  border-bottom: none;
+}
+
+.image-wrapper {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+}
+
+.cart-order-item-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background: #f1f1f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+}
+
+.image-placeholder i {
+  font-size: 24px;
+}
+
+.cart-order-item-info {
+  flex: 1;
+}
+
+.cart-order-item-info h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.cart-order-item-details {
+  display: flex;
+  gap: 20px;
+  font-size: 14px;
+  color: #666;
+}
+
+.cart-order-item-total {
+  font-weight: 700;
+  color: #e74c3c;
+  min-width: 80px;
+  text-align: right;
+}
+
+/* 无商品提示 */
+.no-goods-message {
+  text-align: center;
+  padding: 40px 0;
+  color: #ff6b6b;
+}
+
+.no-goods-message i {
+  font-size: 50px;
+  margin-bottom: 15px;
+}
+
+.no-goods-message p {
+  font-size: 18px;
+  font-weight: 500;
+}
 .dialog-header {
   display: flex;
   align-items: center;

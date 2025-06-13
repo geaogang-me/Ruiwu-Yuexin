@@ -242,7 +242,7 @@ const getCount = (status) => {
 };
 
 const goBack = () => {
-  router.back();
+  router.push("/home");
 };
 
 const getOrderStatus = (status) => {
