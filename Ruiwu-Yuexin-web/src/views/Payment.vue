@@ -31,34 +31,52 @@
 
 <script setup>
 import { ref } from "vue";
-import { useRouter } from "vue-router";
-// 加载本地图片，放在 src/assets/images 下
+import { useRouter, useRoute } from "vue-router";
+import api from "@/plugins/axios";
 import processingImg from "@/assets/qrcode.png";
 
 const router = useRouter();
-const step = ref("select"); // select, processing, done
+const route = useRoute();
+// 从 query 中读取 orderId
+const orderId = route.query.orderId;
+const step = ref("select");
 const currentLabel = ref("");
 const processingImage = ref(processingImg);
 
-function pay(method) {
+async function pay(method) {
+  if (!orderId) {
+    alert("缺少订单 ID，无法支付");
+    return;
+  }
   currentLabel.value = method === "wechat" ? "微信支付" : "支付宝支付";
   step.value = "processing";
-  // 模拟异步加载两秒后完成
-  setTimeout(() => {
-    step.value = "done";
+
+  setTimeout(async () => {
+    try {
+      // 调用更新状态接口
+      await api.post("/order/updateStatus", null, {
+        params: { orderId },
+      });
+      step.value = "done";
+    } catch (err) {
+      console.error("支付状态更新失败", err);
+      alert("支付失败，请稍后再试");
+      step.value = "select";
+    }
   }, 2000);
 }
 
 function goBack() {
-  router.push("/");
+  router.push({ path: "/" });
 }
 
 function viewOrders() {
-  router.push("/order");
+  router.push({ path: "/order" });
 }
 </script>
 
 <style scoped>
+/* 样式保持不变 */
 .payment-container {
   max-width: 400px;
   margin: 100px auto;

@@ -23,7 +23,7 @@
         @click="changeFilterStatus(status.name)"
       >
         {{ status.label }}
-        <span v-if="status.name !== null" class="count-badge">
+        <span class="count-badge">
           {{ getCount(status.name) }}
         </span>
       </el-button>
@@ -86,7 +86,7 @@
             <div class="order-summary">
               <div class="total-price">总价: ¥{{ order.price }}</div>
               <el-button
-                v-if="order.status === 2"
+                v-if="order.status === 3"
                 type="primary"
                 class="action-button"
                 @click="confirmReceipt(order.id)"
@@ -129,16 +129,21 @@ const orderStatuses = [
   },
   {
     name: 1,
+    label: "待支付",
+    class: "Pending-payment",
+  },
+  {
+    name: 2,
     label: "待发货",
     class: "pending-shipment",
   },
   {
-    name: 2,
+    name: 3,
     label: "已发货",
-    class: "shipped",
+    class: "Shipped",
   },
   {
-    name: 3,
+    name: 4,
     label: "已完成",
     class: "completed",
   },
@@ -159,10 +164,12 @@ const filterStatusLabel = computed(() => {
 const getStatusClass = (status) => {
   switch (status) {
     case 1:
-      return "pending";
+      return "Pending-payment";
     case 2:
-      return "shipped";
+      return "pending-shipment";
     case 3:
+      return "Shipped";
+    case 4:
       return "completed";
     default:
       return "";
@@ -248,10 +255,12 @@ const goBack = () => {
 const getOrderStatus = (status) => {
   switch (status) {
     case 1:
-      return "待发货";
+      return "待支付";
     case 2:
-      return "已发货";
+      return "待发货";
     case 3:
+      return "已发货";
+    case 4:
       return "已完成";
     default:
       return "未知";
@@ -268,7 +277,7 @@ const confirmReceipt = async (orderId) => {
       // 更新订单状态
       const order = allOrders.value.find((o) => o.id === orderId);
       if (order) {
-        order.status = 3;
+        order.status = 4;
       }
     } else {
       ElMessage.error("确认收货失败");
@@ -429,18 +438,23 @@ onUnmounted(() => {
   color: #6c757d;
 }
 
+.Pending-payment {
+  background: linear-gradient(to right, #f6d365, #ef4444);
+  color: #fff;
+}
+
 .pending-shipment {
   background: linear-gradient(to right, #f6d365, #fda085);
   color: #fff;
 }
 
 .shipped {
-  background: linear-gradient(to right, #5ee7df, #b490ca);
+  background: linear-gradient(to right, #5ee7df, #6a87d5);
   color: #fff;
 }
 
 .completed {
-  background: linear-gradient(to right, #a1c4fd, #c2e9fb);
+  background: linear-gradient(to right, #87e3f4, #90ea99);
   color: #fff;
 }
 
@@ -578,7 +592,11 @@ onUnmounted(() => {
   transition: all 0.3s ease;
 }
 
-.status-pending {
+.status-Pending-payment {
+  background-color: rgba(235, 113, 85, 0.15);
+  color: #fb1212;
+}
+.status-pending-shipment {
   background-color: rgba(253, 182, 27, 0.15);
   color: #fdb61b;
 }

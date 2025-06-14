@@ -496,6 +496,7 @@ async function submitOrder() {
 
       const res = await api.post("/order/create", payload);
       if (res.data.code === "200") {
+        const newOrderId = res.data.data;
         Swal.fire({
           icon: "success",
           title: "订单提交成功",
@@ -504,7 +505,7 @@ async function submitOrder() {
         });
         emit("order-submitted");
         emit("update:visible", false);
-        router.push("/payment");
+        router.push({ path: "/payment", query: { orderId: newOrderId } });
       } else {
         Swal.fire({
           icon: "error",
