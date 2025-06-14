@@ -335,17 +335,20 @@ const loadUserInfo = async () => {
       avatar: processAvatar(user.avatar),
     });
   } catch (err) {
-    console.error(err);
     ElMessage.error("获取用户信息失败");
   }
 };
-
+const submitting = ref(false);
 // --- 提交修改 ---
 const submitForm = async () => {
   ElMessage.closeAll();
   if (!checkTokenValidity()) return;
+
+  submitting.value = true;
   try {
+    // 校验表单
     await userFormRef.value.validate();
+
     // 构造参数
     const params = {
       username: form.username,
@@ -356,9 +359,16 @@ const submitForm = async () => {
       avatar: form.avatar,
     };
 
-    const res = await api.put("/user/update", params);
-    const { data: updatedUser } = res.data;
+    // 发起更新请求
+    const response = await api.put("/user/update", params);
+    const { code, msg, data: updatedUser } = response.data;
 
+    // 如果后端业务码不是 200，则抛出错误进入 catch
+    if (String(code) !== "200") {
+      throw new Error(msg || "修改异常");
+    }
+
+    // 成功提示
     ElMessage.success("个人信息修改成功");
 
     // 本地 & Vuex 同步
@@ -369,11 +379,13 @@ const submitForm = async () => {
       ...(updatedUser?.avatar ? { avatar: updatedUser.avatar } : {}),
     };
     localStorage.setItem("userInfo", JSON.stringify(merged));
-
     store.commit("updateUserInfo", merged);
   } catch (err) {
     console.error(err);
+    // 优先展示自定义错误信息，否则兜底展示 err.message
     ElMessage.error(err.response?.data?.message || err.message || "修改异常");
+  } finally {
+    submitting.value = false;
   }
 };
 

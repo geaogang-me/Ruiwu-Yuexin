@@ -222,13 +222,16 @@ const fetchCart = async () => {
   }
 };
 
-const deleteItem = async (item) => {
+const deleteItem = async (item, silent = false) => {
   try {
     const res = await api.delete(`/cart/delete`, {
       data: { userId: store.state.userId, id: item.id },
     });
     if (res.data.code === "200") {
-      ElMessage.success("删除成功");
+      //silent:静默删除
+      if (!silent) {
+        ElMessage.success("删除成功");
+      }
 
       const index = cartItems.value.findIndex((i) => i.goodId === item.goodId);
       if (index !== -1) {
@@ -303,7 +306,7 @@ const onOrderSubmitted = async () => {
 
   // 顺序删除，保证每次动画/DOM 更新完再删下一条
   for (const item of selectedItems.value) {
-    await deleteItem(item);
+    await deleteItem(item, true);
   }
 
   // 清空选中
