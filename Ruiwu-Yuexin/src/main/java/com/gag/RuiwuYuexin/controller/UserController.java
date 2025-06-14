@@ -25,7 +25,7 @@ public class UserController {
 
     // 获取用户信息
     @GetMapping("/user/info")
-    public Result getUserInfo(HttpServletRequest request) {
+    public Result<UserDTO> getUserInfo(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return Result.error("缺少或格式错误的 Authorization 头");
@@ -36,11 +36,19 @@ public class UserController {
         User user = userService.findById(userId);
         UserDTO userDTO = new UserDTO();
         BeanUtils.copyProperties(user, userDTO);
-        return Result.success(user);
+
+        // 添加对头像的处理
+        if (user.getAvatarBytes() != null) {
+            String base64Avatar = "data:image/jpeg;base64," +
+                    Base64.getEncoder().encodeToString(user.getAvatarBytes());
+            userDTO.setAvatar(base64Avatar);
+        }
+
+        return Result.success(userDTO); // 修改这里返回 UserDTO
     }
 
     @PostMapping("/user/verify-password")
-    public Result verifyPassword(@RequestBody Map<String, String> requestBody, HttpServletRequest request) {
+    public Result<String> verifyPassword(@RequestBody Map<String, String> requestBody, HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return Result.error("缺少或格式错误的 Authorization 头");
@@ -67,8 +75,9 @@ public class UserController {
 
         return Result.success("原密码正确");
     }
+
     @PostMapping("/user/change-password")
-    public Result changePassword(@RequestBody Map<String, String> requestBody, HttpServletRequest request) {
+    public Result<String> changePassword(@RequestBody Map<String, String> requestBody, HttpServletRequest request) {
         try {
             String authHeader = request.getHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -117,8 +126,9 @@ public class UserController {
             return Result.error("密码更新失败: " + e.getMessage());
         }
     }
+
     @PutMapping("/user/update")
-    public Result updateUser(@RequestBody UserDTO userDTO, HttpServletRequest request) {
+    public Result<UserDTO> updateUser(@RequestBody UserDTO userDTO, HttpServletRequest request) {
         String token = request.getHeader("Authorization").replace("Bearer ","");
         Long userId = jwtUtils.getUserIdFromToken(token);
 
@@ -136,7 +146,18 @@ public class UserController {
         }
 
         User updatedUser = userService.updateUser(user);
-        return Result.success(updatedUser);
-    }
 
+        // 返回更新后的用户信息
+        UserDTO updatedUserDTO = new UserDTO();
+        BeanUtils.copyProperties(updatedUser, updatedUserDTO);
+
+        // 添加对头像的处理
+        if (updatedUser.getAvatarBytes() != null) {
+            String base64Avatar = "data:image/jpeg;base64," +
+                    Base64.getEncoder().encodeToString(updatedUser.getAvatarBytes());
+            updatedUserDTO.setAvatar(base64Avatar);
+        }
+
+        return Result.success(updatedUserDTO);
+    }
 }
