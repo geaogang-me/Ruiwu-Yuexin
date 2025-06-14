@@ -29,7 +29,7 @@ public class LoginController {
     private RedisTemplate<String, String> redisTemplate;
 
     @PostMapping("/login")
-    public Result login(@RequestBody User userRequest) {
+    public Result<UserDTO> login(@RequestBody User userRequest) {
         User user = userService.findByUserName(userRequest.getUsername());
         if (user != null && user.getPassword().equals(userRequest.getPassword())) {
             // 登录成功后生成 Token
@@ -47,7 +47,7 @@ public class LoginController {
     }
 
     @PostMapping("/logout")
-    public Result logout(HttpServletRequest request) {
+    public Result<String> logout(HttpServletRequest request) {
         // 从请求头获取Token
         String token = request.getHeader("Authorization");
         if (token == null || !token.startsWith("Bearer ")) {
@@ -80,7 +80,7 @@ public class LoginController {
     }
 
     @PostMapping("/register")
-    public Result register(@RequestBody User registerRequest) {
+    public Result<String> register(@RequestBody User registerRequest) {
         // 验证用户是否已存在
         User existingUser = userService.findByUserName(registerRequest.getUsername());
         if (existingUser != null) {

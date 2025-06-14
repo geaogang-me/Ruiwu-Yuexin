@@ -17,7 +17,7 @@ public class OrderController {
     private OrderService orderService;
 
     @PostMapping("/create")
-    public Result<?> createOrder(@RequestBody OrderRequest req) {
+    public Result<String> createOrder(@RequestBody OrderRequest req) {
         if (req.getUserId() == null) {
             return Result.error("用户未登录");
         }
@@ -30,7 +30,7 @@ public class OrderController {
         return Result.success(list);
     }
     @PostMapping("/confirmReceipt/{orderId}")
-    public Result<?> confirmReceipt(@PathVariable Long orderId) {
+    public Result<String> confirmReceipt(@PathVariable Long orderId) {
         boolean success = orderService.confirmReceipt(orderId);
         if (success) {
             return Result.success("确认收货成功");

@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
 import java.util.Map;
-
 @RestController
 @RequestMapping("/api")
 public class UserController {
@@ -22,7 +21,6 @@ public class UserController {
     private UserService userService;
     @Autowired
     private JwtUtils jwtUtils;
-
     // 获取用户信息
     @GetMapping("/user/info")
     public Result<UserDTO> getUserInfo(HttpServletRequest request) {
@@ -30,30 +28,24 @@ public class UserController {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return Result.error("缺少或格式错误的 Authorization 头");
         }
-
         String token = authHeader.replace("Bearer ", "");
         Long userId = jwtUtils.getUserIdFromToken(token);
         User user = userService.findById(userId);
         UserDTO userDTO = new UserDTO();
         BeanUtils.copyProperties(user, userDTO);
-
         // 添加对头像的处理
         if (user.getAvatarBytes() != null) {
-            String base64Avatar = "data:image/jpeg;base64," +
-                    Base64.getEncoder().encodeToString(user.getAvatarBytes());
+            String base64Avatar = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(user.getAvatarBytes());
             userDTO.setAvatar(base64Avatar);
         }
-
         return Result.success(userDTO); // 修改这里返回 UserDTO
     }
-
     @PostMapping("/user/verify-password")
     public Result<String> verifyPassword(@RequestBody Map<String, String> requestBody, HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return Result.error("缺少或格式错误的 Authorization 头");
         }
-
         String token = authHeader.replace("Bearer ", "");
         Long userId = jwtUtils.getUserIdFromToken(token);
 
@@ -61,21 +53,17 @@ public class UserController {
         if (user == null) {
             return Result.error("用户不存在");
         }
-
         // 从请求体中提取 oldPassword
         String oldPassword = requestBody.get("oldPassword");
         if (oldPassword == null) {
             return Result.error("未提供原密码");
         }
-
         // 验证原密码是否正确
         if (!user.getPassword().equals(oldPassword)) {
             return Result.error("原密码错误");
         }
-
         return Result.success("原密码正确");
     }
-
     @PostMapping("/user/change-password")
     public Result<String> changePassword(@RequestBody Map<String, String> requestBody, HttpServletRequest request) {
         try {
@@ -83,7 +71,6 @@ public class UserController {
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return Result.error("缺少或格式错误的 Authorization 头");
             }
-
             String token = authHeader.replace("Bearer ", "");
             Long userId = jwtUtils.getUserIdFromToken(token);
 
@@ -91,34 +78,26 @@ public class UserController {
             if (user == null) {
                 return Result.error("用户不存在");
             }
-
             // 提取请求参数
             String oldPassword = requestBody.get("oldPassword");
             String newPassword = requestBody.get("newPassword");
-
             if (oldPassword == null || oldPassword.isEmpty()) {
                 return Result.error("请提供原密码");
             }
-
             if (newPassword == null || newPassword.isEmpty()) {
                 return Result.error("请提供新密码");
             }
-
             // 验证原密码是否正确
             if (!user.getPassword().equals(oldPassword)) {
                 return Result.error("原密码错误");
             }
-
             // 验证新密码强度
             if (newPassword.length() < 6) {
                 return Result.error("密码长度至少需要6个字符");
             }
-
             // 更新密码
             user.setPassword(newPassword);
-
             userService.updateUser(user);
-
             return Result.success("密码更新成功");
         } catch (DataAccessException e) {
             return Result.error("数据库错误: " + e.getMessage());
@@ -129,35 +108,28 @@ public class UserController {
 
     @PutMapping("/user/update")
     public Result<UserDTO> updateUser(@RequestBody UserDTO userDTO, HttpServletRequest request) {
-        String token = request.getHeader("Authorization").replace("Bearer ","");
+        String token = request.getHeader("Authorization").replace("Bearer ", "");
         Long userId = jwtUtils.getUserIdFromToken(token);
-
         User user = userService.findById(userId);
         User existingUser = userService.findByUserName(userDTO.getUsername());
-        if (existingUser != null && !userDTO.getUsername().equals(user.getUsername() )) {
+        if (existingUser != null && !userDTO.getUsername().equals(user.getUsername())) {
             return Result.error("用户已存在");
         }
-        BeanUtils.copyProperties(userDTO, user,"id");
-
+        BeanUtils.copyProperties(userDTO, user, "id");
         if (userDTO.getAvatar() != null && userDTO.getAvatar().contains(",")) {
             String base64Data = userDTO.getAvatar().split(",")[1];
             byte[] avatarBytes = Base64.getDecoder().decode(base64Data);
             user.setAvatarBytes(avatarBytes);
         }
-
         User updatedUser = userService.updateUser(user);
-
         // 返回更新后的用户信息
         UserDTO updatedUserDTO = new UserDTO();
         BeanUtils.copyProperties(updatedUser, updatedUserDTO);
-
         // 添加对头像的处理
         if (updatedUser.getAvatarBytes() != null) {
-            String base64Avatar = "data:image/jpeg;base64," +
-                    Base64.getEncoder().encodeToString(updatedUser.getAvatarBytes());
+            String base64Avatar = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(updatedUser.getAvatarBytes());
             updatedUserDTO.setAvatar(base64Avatar);
         }
-
         return Result.success(updatedUserDTO);
     }
 }

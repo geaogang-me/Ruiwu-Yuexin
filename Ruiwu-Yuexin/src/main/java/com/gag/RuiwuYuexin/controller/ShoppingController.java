@@ -21,7 +21,7 @@ public class ShoppingController {
     @Autowired
     private JwtUtils jwtUtils;
     @PostMapping("/addToCart")
-    public Result addGoodToCart(@RequestBody Map<String, Object> map, HttpServletRequest request) {
+    public Result<?> addGoodToCart(@RequestBody Map<String, Object> map, HttpServletRequest request) {
         // 从请求头提取 Token
         String token = request.getHeader("Authorization");
         if (token == null || !token.startsWith("Bearer ")) {
