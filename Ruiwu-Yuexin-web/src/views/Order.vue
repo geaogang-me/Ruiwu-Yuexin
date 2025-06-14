@@ -85,6 +85,16 @@
 
             <div class="order-summary">
               <div class="total-price">总价: ¥{{ order.price }}</div>
+              <!-- 待支付状态：去支付 -->
+              <el-button
+                v-if="order.status === 1"
+                type="primary"
+                class="act-button"
+                @click="goToPay(order.id)"
+              >
+                去支付
+              </el-button>
+              <!-- 已发货状态：确认收货 -->
               <el-button
                 v-if="order.status === 3"
                 type="primary"
@@ -265,6 +275,10 @@ const getOrderStatus = (status) => {
     default:
       return "未知";
   }
+};
+
+const goToPay = (orderId) => {
+  router.push({ path: "/payment", query: { orderId } });
 };
 
 const confirmReceipt = async (orderId) => {
@@ -693,6 +707,22 @@ onUnmounted(() => {
 }
 
 .action-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 15px rgba(39, 102, 245, 0.35);
+}
+
+.act-button {
+  padding: 10px 25px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(39, 102, 245, 0.25);
+  background: linear-gradient(to right, #59d04c, #39cc5b);
+  border: none;
+  color: white;
+}
+
+.act-button:hover {
   transform: translateY(-3px);
   box-shadow: 0 7px 15px rgba(39, 102, 245, 0.35);
 }
