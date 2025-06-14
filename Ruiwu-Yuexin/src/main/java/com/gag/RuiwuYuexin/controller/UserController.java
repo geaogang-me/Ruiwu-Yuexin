@@ -123,6 +123,10 @@ public class UserController {
         Long userId = jwtUtils.getUserIdFromToken(token);
 
         User user = userService.findById(userId);
+        User existingUser = userService.findByUserName(userDTO.getUsername());
+        if (existingUser != null && !userDTO.getUsername().equals(user.getUsername() )) {
+            return Result.error("用户已存在");
+        }
         BeanUtils.copyProperties(userDTO, user,"id");
 
         if (userDTO.getAvatar() != null && userDTO.getAvatar().contains(",")) {
@@ -131,8 +135,8 @@ public class UserController {
             user.setAvatarBytes(avatarBytes);
         }
 
-        userService.updateUser(user);
-        return Result.success("更新成功");
+        User updatedUser = userService.updateUser(user);
+        return Result.success(updatedUser);
     }
 
 }

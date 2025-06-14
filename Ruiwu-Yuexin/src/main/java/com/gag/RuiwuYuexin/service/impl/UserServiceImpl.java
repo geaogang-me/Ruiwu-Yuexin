@@ -35,8 +35,9 @@ public class UserServiceImpl  implements UserService {
         return userMapper.findByUsernameAndPassword(username, password);
     }
     @Override
-    public void updateUser(User user) {
+    public User updateUser(User user) {
         userMapper.updateById(user);
+        return userMapper.findById(user.getId());
     }
 
 }
