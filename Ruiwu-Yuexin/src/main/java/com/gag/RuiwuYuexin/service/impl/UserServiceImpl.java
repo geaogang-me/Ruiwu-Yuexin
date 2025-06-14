@@ -1,16 +1,9 @@
 package com.gag.RuiwuYuexin.service.impl;
-
 import com.gag.RuiwuYuexin.entity.User;
 import com.gag.RuiwuYuexin.mapper.UserMapper;
 import com.gag.RuiwuYuexin.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-
 @Service
 public class UserServiceImpl  implements UserService {
     @Autowired
