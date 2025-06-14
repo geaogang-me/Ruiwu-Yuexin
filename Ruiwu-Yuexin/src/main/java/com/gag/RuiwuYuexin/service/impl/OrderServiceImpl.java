@@ -18,7 +18,7 @@ public class OrderServiceImpl implements OrderService {
     private OrderMapper orderMapper;
 
     @Override
-    public void createOrder(OrderRequest req) {
+    public Long createOrder(OrderRequest req) {
         // 1. 拿单价
         BigDecimal unitPrice = orderMapper.selectUnitPriceByGoodId(req.getGoodId());
         // 2. 计算总价
@@ -33,6 +33,11 @@ public class OrderServiceImpl implements OrderService {
         o.setStatus(1); // 初始状态：待发货
         o.setCreated(LocalDateTime.now());
         orderMapper.insertOrder(o);
+        return o.getId();
+    }
+    @Override
+    public void updateOrderStatusToShipped(Long orderId) {
+        orderMapper.updateOrderStatus(orderId, 2); // 2 表示已发货
     }
 
     @Override
@@ -50,8 +55,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public boolean confirmReceipt(Long orderId) {
         Order order = orderMapper.selectById(orderId);
-        if (order != null && order.getStatus() == 2) { // 已发货状态才能收货
-            order.setStatus(3); // 4 表示已完成
+        if (order != null && order.getStatus() == 3) { // 已发货状态才能收货
+            order.setStatus(4); // 4 表示已完成
             orderMapper.updateById(order);
             return true;
         }

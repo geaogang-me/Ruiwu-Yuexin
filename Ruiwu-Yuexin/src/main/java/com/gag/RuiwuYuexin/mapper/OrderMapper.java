@@ -3,7 +3,6 @@ package com.gag.RuiwuYuexin.mapper;
 import com.gag.RuiwuYuexin.dto.OrderDetailDto;
 import com.gag.RuiwuYuexin.entity.Order;
 import org.apache.ibatis.annotations.*;
-import org.springframework.data.domain.jaxb.SpringDataJaxb;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,6 +23,13 @@ public interface OrderMapper {
       """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insertOrder(Order order);
+
+    @Update("""
+    UPDATE orders
+    SET status = #{status}
+    WHERE id = #{orderId}
+    """)
+    int updateOrderStatus(@Param("orderId") Long orderId, @Param("status") int status);
 
     List<OrderDetailDto> getOrderDetailsByUserId(@Param("userId") Long userId);
 

@@ -17,13 +17,22 @@ public class OrderController {
     private OrderService orderService;
 
     @PostMapping("/create")
-    public Result<String> createOrder(@RequestBody OrderRequest req) {
+    public Result<Long> createOrder(@RequestBody OrderRequest req) {
         if (req.getUserId() == null) {
             return Result.error("用户未登录");
         }
-        orderService.createOrder(req);
-        return Result.success("订单创建成功");
+        Long orderId = orderService.createOrder(req);
+        return Result.success(orderId);
     }
+    @PostMapping("/updateStatus")
+    public Result<String> updateOrderStatus(@RequestParam Long orderId) {
+        if (orderId == null) {
+            return Result.error("订单ID不能为空");
+        }
+        orderService.updateOrderStatusToShipped(orderId);
+        return Result.success("订单状态更新成功");
+    }
+
     @GetMapping("/list")
     public Result<List<OrderDetailDto>> listOrders(@RequestParam Long userId) {
         List<OrderDetailDto> list = orderService.getOrderDetailsByUserId(userId);
