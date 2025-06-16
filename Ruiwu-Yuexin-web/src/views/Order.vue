@@ -121,7 +121,7 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/plugins/axios";
-import { ElMessage } from "element-plus";
+import Swal from "sweetalert2";
 
 const router = useRouter();
 const allOrders = ref([]);
@@ -240,11 +240,21 @@ const fetchOrders = async () => {
         newOrders.value.clear();
       }, 4000);
     } else {
-      ElMessage.error("加载订单失败");
+      Swal.fire({
+        icon: "error",
+        title: "加载订单失败",
+        timer: 1000,
+        showConfirmButton: false,
+      });
     }
   } catch (e) {
     console.error(e);
-    ElMessage.error("获取订单出错");
+    Swal.fire({
+      icon: "error",
+      title: "获取订单出错",
+      timer: 1000,
+      showConfirmButton: false,
+    });
   } finally {
     setTimeout(() => {
       loading.value = false;
@@ -283,22 +293,48 @@ const goToPay = (orderId) => {
 
 const confirmReceipt = async (orderId) => {
   try {
-    const res = await api.post(`/order/confirmReceipt/${orderId}`);
+    const result = await Swal.fire({
+      title: "确认收货？",
+      text: "请确认您已经收到商品！",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "是的，确认收货",
+      cancelButtonText: "取消",
+    });
+    if (result.isConfirmed) {
+      const res = await api.post(`/order/confirmReceipt/${orderId}`);
+      if (res.data.code === "200") {
+        Swal.fire({
+          icon: "success",
+          title: "确认收货成功",
+          timer: 1000,
+          showConfirmButton: false,
+        });
 
-    if (res.data.code === "200") {
-      ElMessage.success("确认收货成功");
-
-      // 更新订单状态
-      const order = allOrders.value.find((o) => o.id === orderId);
-      if (order) {
-        order.status = 4;
+        // 更新订单状态
+        const order = allOrders.value.find((o) => o.id === orderId);
+        if (order) {
+          order.status = 4;
+        }
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "确认收货失败",
+          timer: 1000,
+          showConfirmButton: false,
+        });
       }
-    } else {
-      ElMessage.error("确认收货失败");
     }
   } catch (e) {
     console.error(e);
-    ElMessage.error("确认收货出错");
+    Swal.fire({
+      icon: "error",
+      title: "确认收货出错",
+      timer: 1000,
+      showConfirmButton: false,
+    });
   }
 };
 

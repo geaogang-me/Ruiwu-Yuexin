@@ -61,7 +61,6 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/plugins/axios";
 import Swal from "sweetalert2";
-import { ElMessage } from "element-plus";
 
 const userId = JSON.parse(localStorage.getItem("userInfo"))?.id || null;
 const router = useRouter();
@@ -85,10 +84,20 @@ const fetchFavorites = async () => {
         });
       }, 50);
     } else {
-      ElMessage.error("加载收藏失败");
+      Swal.fire({
+        icon: "error",
+        title: "加载失败",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     }
   } catch (err) {
-    ElMessage.error("请求失败，请稍后重试");
+    Swal.fire({
+      icon: "error",
+      title: "请求失败,请稍后重试",
+      timer: 1500,
+      showConfirmButton: false,
+    });
   } finally {
     loading.value = false;
   }
@@ -104,7 +113,12 @@ const removeFavorite = async (goodId) => {
       params: { userId, goodId },
     });
     if (res.data.code === "200") {
-      ElMessage.success("已取消收藏");
+      Swal.fire({
+        icon: "success",
+        title: "已取消收藏",
+        timer: 800,
+        showConfirmButton: false,
+      });
 
       // 添加删除动画
       const index = favorites.value.findIndex((item) => item.id === goodId);
@@ -118,10 +132,20 @@ const removeFavorite = async (goodId) => {
         }, 300);
       }
     } else {
-      ElMessage.error(res.data.msg || "取消收藏失败");
+      Swal.fire({
+        icon: "error",
+        title: res.data.msg || "取消收藏失败",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     }
   } catch (err) {
-    ElMessage.error("请求失败");
+    Swal.fire({
+      icon: "error",
+      title: "请求失败",
+      timer: 500,
+      showConfirmButton: false,
+    });
   }
 };
 

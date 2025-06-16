@@ -137,10 +137,9 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/plugins/axios";
-import Swal from "sweetalert2";
 import { ArrowLeft } from "@element-plus/icons-vue";
 import { useStore } from "vuex";
-import { ElMessage } from "element-plus";
+import Swal from "sweetalert2";
 import { onUnmounted } from "vue";
 import OrderDialog from "@/components/OrderDialog.vue";
 
@@ -160,18 +159,6 @@ const selectedItems = computed(() => {
     selectedItemIds.value.includes(item.goodId)
   );
 });
-
-// const firstSelectedGood = computed(() => {
-//   // 确保至少有一个选中商品时才返回对象
-//   return selectedItems.value.length > 0
-//     ? {
-//         id: selectedItems.value[0].goodId,
-//         name: selectedItems.value[0].goodName,
-//         price: selectedItems.value[0].price,
-//         image: "data:image/jpeg;base64," + selectedItems.value[0].goodImage,
-//       }
-//     : null; // 无商品时返回null
-// });
 
 const totalSelectedPrice = computed(() => {
   return selectedItems.value.reduce((sum, item) => {
@@ -212,11 +199,20 @@ const fetchCart = async () => {
         });
       }, 50);
     } else {
-      ElMessage.error("获取购物车失败");
+      Swal.fire({
+        icon: "error",
+        title: "获取购物车失败",
+        timer: 1000,
+        showConfirmButton: false,
+      });
     }
   } catch (err) {
-    console.error("获取购物车失败：", err);
-    ElMessage.error("请求失败，请稍后重试");
+    Swal.fire({
+      icon: "error",
+      title: "请求失败请稍后重试",
+      timer: 1000,
+      showConfirmButton: false,
+    });
   } finally {
     loading.value = false;
   }
@@ -230,7 +226,12 @@ const deleteItem = async (item, silent = false) => {
     if (res.data.code === "200") {
       //silent:静默删除
       if (!silent) {
-        ElMessage.success("删除成功");
+        Swal.fire({
+          icon: "success",
+          title: "删除成功",
+          timer: 1000,
+          showConfirmButton: false,
+        });
       }
 
       const index = cartItems.value.findIndex((i) => i.goodId === item.goodId);
@@ -255,11 +256,20 @@ const deleteItem = async (item, silent = false) => {
         }
       }
     } else {
-      ElMessage.error(`删除失败：${res.data.msg}`);
+      Swal.fire({
+        icon: "error",
+        title: "删除失败",
+        text: res.data.msg,
+        showConfirmButton: false,
+      });
     }
   } catch (err) {
-    console.error("删除失败：", err);
-    ElMessage.error("网络错误");
+    Swal.fire({
+      icon: "error",
+      title: "网络错误",
+      timer: 1000,
+      showConfirmButton: false,
+    });
   }
 };
 
@@ -270,10 +280,19 @@ const isItemSelected = (goodId) => {
 const updateItemQuantity = async (item) => {
   try {
     // 这里实际调用API更新购物车商品数量
-    ElMessage.success("数量更新成功");
+    Swal.fire({
+      icon: "success",
+      title: "数量更新成功",
+      timer: 1000,
+      showConfirmButton: false,
+    });
   } catch (err) {
-    console.error("更新数量失败：", err);
-    ElMessage.error("更新失败");
+    Swal.fire({
+      icon: "error",
+      title: "更新失败",
+      timer: 1000,
+      showConfirmButton: false,
+    });
   }
 };
 
@@ -293,7 +312,12 @@ const deleteSelectedItems = () => {
 // 打开订单对话框（与详情页保持一致）
 const openOrderDialog = () => {
   if (selectedItems.value.length === 0) {
-    ElMessage.warning("请至少选择一个商品");
+    Swal.fire({
+      icon: "warning",
+      title: "至少选择一个商品",
+      timer: 1000,
+      showConfirmButton: false,
+    });
     return;
   }
   orderVisible.value = true;

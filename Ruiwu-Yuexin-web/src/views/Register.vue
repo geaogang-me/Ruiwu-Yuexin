@@ -58,7 +58,7 @@
 <script>
 import { reactive, ref } from "vue";
 import { useRouter } from "vue-router";
-import { ElMessage } from "element-plus";
+import Swal from "sweetalert2";
 import { Plus } from "@element-plus/icons-vue";
 import api from "@/plugins/axios";
 
@@ -80,11 +80,21 @@ export default {
       const isLt2M = file.size / 1024 / 1024 < 2;
 
       if (!isImage) {
-        ElMessage.error("上传头像图片只能是图片格式!");
+        Swal.fire({
+          icon: "error",
+          title: "头像只能是图片格式 ！",
+          timer: 1000,
+          showConfirmButton: false,
+        });
         return false;
       }
       if (!isLt2M) {
-        ElMessage.error("上传头像图片大小不能超过 2MB!");
+        Swal.fire({
+          icon: "error",
+          title: "头像图片不能超过2MB ！",
+          timer: 1000,
+          showConfirmButton: false,
+        });
         return false;
       }
 
@@ -102,22 +112,42 @@ export default {
 
     const handleRegister = async () => {
       if (form.username === "") {
-        ElMessage.error("用户名不能为空");
+        Swal.fire({
+          icon: "error",
+          title: "用户名不能为空",
+          timer: 1000,
+          showConfirmButton: false,
+        });
         return;
       }
 
       if (form.password === "") {
-        ElMessage.error("密码不能为空");
+        Swal.fire({
+          icon: "error",
+          title: "密码不能为空",
+          timer: 1000,
+          showConfirmButton: false,
+        });
         return;
       }
 
       if (form.confirmPassword === "") {
-        ElMessage.error("确认密码不能为空");
+        Swal.fire({
+          icon: "error",
+          title: "确认密码不能为空",
+          timer: 1000,
+          showConfirmButton: false,
+        });
         return;
       }
 
       if (form.password !== form.confirmPassword) {
-        ElMessage.error("两次输入的密码不一致");
+        Swal.fire({
+          icon: "error",
+          title: "两次输入密码不一致",
+          timer: 1000,
+          showConfirmButton: false,
+        });
         return;
       }
 
@@ -129,13 +159,28 @@ export default {
         });
 
         if (response.data.code === "200") {
-          ElMessage.success("注册成功！");
+          Swal.fire({
+            icon: "success",
+            title: "注册成功",
+            timer: 1000,
+            showConfirmButton: false,
+          });
           await router.push("/login");
         } else {
-          ElMessage.error(response.data.msg);
+          Swal.fire({
+            icon: "error",
+            text: response.data.msg,
+            timer: 1000,
+            showConfirmButton: false,
+          });
         }
       } catch (error) {
-        ElMessage.error("注册请求失败，请稍后重试");
+        Swal.fire({
+          icon: "error",
+          title: "注册请求失败,请稍后重试",
+          timer: 1000,
+          showConfirmButton: false,
+        });
       }
     };
 

@@ -201,7 +201,7 @@ import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import api from "@/plugins/axios";
-import { ElMessage } from "element-plus";
+import Swal from "sweetalert2";
 import { useAuth } from "@/composables/useAuth"; // <-- 新增
 
 const { checkTokenValidity, refreshToken } = useAuth();
@@ -300,11 +300,21 @@ const beforeAvatarUpload = (file) => {
   const isImage = file.type.startsWith("image/");
   const isLt2M = file.size / 1024 / 1024 < 2;
   if (!isImage) {
-    ElMessage.error("只能上传图片文件!");
+    Swal.fire({
+      icon: "error",
+      title: "只能上传图片文件",
+      timer: 1000,
+      showConfirmButton: false,
+    });
     return false;
   }
   if (!isLt2M) {
-    ElMessage.error("头像大小不能超过 2MB!");
+    Swal.fire({
+      icon: "error",
+      title: "头像图片不能超过2MB！",
+      timer: 1000,
+      showConfirmButton: false,
+    });
     return false;
   }
   const reader = new FileReader();
@@ -335,13 +345,17 @@ const loadUserInfo = async () => {
       avatar: processAvatar(user.avatar),
     });
   } catch (err) {
-    ElMessage.error("获取用户信息失败");
+    Swal.fire({
+      icon: "error",
+      title: "获取用户信息失败",
+      timer: 1000,
+      showConfirmButton: false,
+    });
   }
 };
 const submitting = ref(false);
 // --- 提交修改 ---
 const submitForm = async () => {
-  ElMessage.closeAll();
   if (!checkTokenValidity()) return;
 
   submitting.value = true;
@@ -369,7 +383,12 @@ const submitForm = async () => {
     }
 
     // 成功提示
-    ElMessage.success("个人信息修改成功");
+    Swal.fire({
+      icon: "success",
+      title: "个人信息修改成功",
+      timer: 1000,
+      showConfirmButton: false,
+    });
 
     // 本地 & Vuex 同步
     const old = JSON.parse(localStorage.getItem("userInfo")) || {};
@@ -383,7 +402,12 @@ const submitForm = async () => {
   } catch (err) {
     console.error(err);
     // 优先展示自定义错误信息，否则兜底展示 err.message
-    ElMessage.error(err.response?.data?.message || err.message || "修改异常");
+    Swal.fire({
+      icon: "error",
+      title: err.response?.data?.message || err.message || "修改异常",
+      timer: 1000,
+      showConfirmButton: false,
+    });
   } finally {
     submitting.value = false;
   }
@@ -412,21 +436,41 @@ const submitPasswordChange = async () => {
     });
 
     if (verifyRes.data.code !== "200") {
-      return ElMessage.error(verifyRes.data.msg || "原密码错误");
+      return Swal.fire({
+        icon: "error",
+        title: verifyRes.data.msg || "原密码错误",
+        timer: 1000,
+        showConfirmButton: false,
+      });
     }
 
     // 修改密码
     const changeRes = await api.post("/user/change-password", params);
 
     if (changeRes.data.code === "200") {
-      ElMessage.success("密码修改成功");
+      Swal.fire({
+        icon: "success",
+        title: "密码修改成功",
+        timer: 1000,
+        showConfirmButton: false,
+      });
       passwordDialogVisible.value = false;
     } else {
-      ElMessage.error(changeRes.data.msg || "密码修改失败");
+      Swal.fire({
+        icon: "error",
+        title: changeRes.data.msg || "密码修改失败",
+        timer: 1000,
+        showConfirmButton: false,
+      });
     }
   } catch (err) {
     console.error(err);
-    ElMessage.error(err.response?.data?.message || "密码修改失败");
+    Swal.fire({
+      icon: "error",
+      title: err.response?.data?.message || "密码修改失败",
+      timer: 1000,
+      showConfirmButton: false,
+    });
   }
 };
 const goBack = () => {
