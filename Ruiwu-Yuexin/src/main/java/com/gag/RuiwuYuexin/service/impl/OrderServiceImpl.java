@@ -37,9 +37,12 @@ public class OrderServiceImpl implements OrderService {
     }
     @Override
     public void updateOrderStatusToShipped(Long orderId) {
-        orderMapper.updateOrderStatus(orderId, 2); // 2 表示已发货
+        orderMapper.updateOrderStatus(orderId, 2); // 2 表示已支付
     }
-
+    public void batchUpdateOrderStatus(List<Long> orderIds) {
+        // 构建更新查询
+        orderMapper.batchUpdateOrderStatus(orderIds, 2);
+    }
     @Override
     public List<OrderDetailDto> getOrderDetailsByUserId(Long userId) {
         List<OrderDetailDto> items = orderMapper.getOrderDetailsByUserId(userId);

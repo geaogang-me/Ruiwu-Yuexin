@@ -26,7 +26,7 @@ public class SecurityConfig {
                                 ,"/api/cart/count","/api/favorite/add","/api/favorite/remove","/api/favorite/check",
                                 "/api/favorite/list","/api/address/list","/api/address/add","/api/address/update",
                                 "/api/address/delete/{id}","/api/order/create","/api/order/list","/api/token/refresh",
-                                "/api/review/add","/api/order/updateStatus","/api/evaluations/{id}").permitAll()
+                                "/api/review/add","/api/order/updateStatus","/api/order/batchUpdateStatus","/api/evaluations/{id}").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

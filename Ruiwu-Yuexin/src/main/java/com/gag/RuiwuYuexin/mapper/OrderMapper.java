@@ -36,7 +36,18 @@ public interface OrderMapper {
     /** 根据订单ID查询订单 */
     @Select("SELECT * FROM orders WHERE id = #{orderId}")
     Order selectById(@Param("orderId") Long orderId);
-
+    @Update({
+            "<script>",
+            "UPDATE orders SET status = #{status} WHERE id IN",
+            "<foreach item='id' collection='orderIds' open='(' separator=',' close=')'>",
+            "   #{id}",
+            "</foreach>",
+            "</script>"
+    })
+    void batchUpdateOrderStatus(
+            @Param("orderIds") List<Long> orderIds,
+            @Param("status") int status
+    );
     /** 根据订单ID更新订单状态 */
     @Update("""
   UPDATE orders
