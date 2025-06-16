@@ -30,21 +30,29 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import api from "@/plugins/axios";
 import processingImg from "@/assets/qrcode.png";
 
 const router = useRouter();
 const route = useRoute();
-// 从 query 中读取 orderId
-const orderId = route.query.orderId;
+const orderIds = ref([]);
 const step = ref("select");
 const currentLabel = ref("");
 const processingImage = ref(processingImg);
-
+onMounted(() => {
+  // 兼容处理单订单和多订单
+  if (route.query.orderIds) {
+    // 多订单模式：逗号分隔的字符串
+    orderIds.value = route.query.orderIds.split(",").map((id) => parseInt(id));
+  } else if (route.query.orderId) {
+    // 单订单模式
+    orderIds.value = [parseInt(route.query.orderId)];
+  }
+});
 async function pay(method) {
-  if (!orderId) {
+  if (orderIds.value.length === 0) {
     alert("缺少订单 ID，无法支付");
     return;
   }
@@ -53,9 +61,11 @@ async function pay(method) {
 
   setTimeout(async () => {
     try {
-      // 调用更新状态接口
-      await api.post("/order/updateStatus", null, {
-        params: { orderId },
+      // 使用批处理接口更新所有订单状态
+      await api.post("/order/batchUpdateStatus", null, {
+        params: {
+          orderIds: orderIds.value.join(","),
+        },
       });
       step.value = "done";
     } catch (err) {
@@ -65,7 +75,6 @@ async function pay(method) {
     }
   }, 2000);
 }
-
 function goBack() {
   router.push({ path: "/" });
 }

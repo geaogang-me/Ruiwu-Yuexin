@@ -448,6 +448,7 @@ async function submitOrder() {
   try {
     // 多个商品处理
     if (props.cartItems.length > 0) {
+      const orderIds = [];
       const promises = props.cartItems.map((item) => {
         const payload = {
           userId,
@@ -459,9 +460,13 @@ async function submitOrder() {
       });
 
       const results = await Promise.all(promises);
-      const allSuccess = results.every((res) => res.data.code === "200");
+      results.forEach((res) => {
+        if (res.data.code === "200") {
+          orderIds.push(res.data.data);
+        }
+      });
 
-      if (allSuccess) {
+      if (orderIds.length > 0) {
         Swal.fire({
           icon: "success",
           title: "订单提交成功",
@@ -470,7 +475,12 @@ async function submitOrder() {
         });
         emit("order-submitted");
         emit("update:visible", false);
-        router.push("/payment");
+        router.push({
+          path: "/payment",
+          query: {
+            orderIds: orderIds.join(","), // 用逗号分隔的订单ID
+          },
+        });
       } else {
         const errorMessages = results
           .filter((res) => res.data.code !== "200")
