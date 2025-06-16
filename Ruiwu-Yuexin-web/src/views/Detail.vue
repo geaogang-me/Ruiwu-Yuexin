@@ -107,6 +107,75 @@
       </el-badge>
     </div>
   </div>
+  <!-- 商品评价区域 -->
+  <div class="evaluation-section" v-if="evaluations.length > 0">
+    <div class="section-header">
+      <h2>买家评价</h2>
+      <div class="total-rating">
+        <!-- 计算平均评分 -->
+        <span class="stars">★★★★★</span>
+        <span class="count">{{ evaluations.length }}条评价</span>
+      </div>
+    </div>
+
+    <div class="evaluation-list">
+      <!-- 评价项组件 -->
+      <div
+        v-for="evaluation in evaluations"
+        :key="evaluation.id"
+        class="evaluation-item"
+      >
+        <div class="user-info">
+          <img
+            :src="evaluation.userAvatar || defaultAvatar"
+            alt="用户头像"
+            class="avatar"
+          />
+          <div class="user-details">
+            <div class="username">
+              {{
+                evaluation.userName
+                  ? formatUsername(evaluation.userName)
+                  : "匿名用户"
+              }}
+            </div>
+            <div class="timestamp">{{ formatDate(evaluation.createTime) }}</div>
+          </div>
+        </div>
+
+        <div class="content-section">
+          <div class="stars">
+            <span v-for="n in 5" :key="n">
+              <i
+                :class="[
+                  'fas fa-star',
+                  n <= evaluation.starLevel ? 'active' : 'inactive',
+                ]"
+              ></i>
+            </span>
+          </div>
+          <p class="comment">{{ evaluation.comment }}</p>
+
+          <div
+            class="evaluation-images"
+            v-if="evaluation.images && evaluation.images.length"
+          >
+            <div
+              v-for="(image, index) in evaluation.images"
+              :key="image.id"
+              class="image-container"
+            >
+              <img
+                :src="`data:image/jpeg;base64,${image.imageData}`"
+                :alt="`评价图片 ${index + 1}`"
+                class="evaluation-image"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -350,10 +419,48 @@ async function toggleFavorite() {
     });
   }
 }
+const evaluations = ref([]); // 保存评价数据
+const defaultAvatar = ref(
+  "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png"
+);
+// 获取商品评价数据
+async function fetchEvaluations() {
+  const goodId = parseInt(route.query.goodId);
+  if (!goodId) return;
 
+  try {
+    const res = await api.get(`/evaluations/${goodId}`);
+    if (res.data.code === "200") {
+      evaluations.value = res.data.data; // 直接赋值数组
+      console.log("加载的评价数据:", evaluations.value);
+    }
+  } catch (error) {
+    console.error("获取评价数据失败:", error);
+  }
+}
+
+// 格式化用户名（确保显示合理长度）
+function formatUsername(name) {
+  if (!name) return "匿名用户";
+  return name.length > 6 ? name.substring(0, 6) + "..." : name;
+}
+
+// 格式化日期
+function formatDate(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 onMounted(() => {
   refreshToken();
   fetchGood();
+  fetchEvaluations();
   if (store.state.isLogin) {
     fetchCartCount();
     fetchFavoriteStatus();
@@ -708,6 +815,157 @@ onMounted(() => {
   .cart-button,
   .favorite-button {
     width: 100%;
+  }
+}
+/* 商品评价区域样式 */
+.evaluation-section {
+  margin-top: 50px;
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+  padding: 30px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #f1f3f5;
+  padding-bottom: 20px;
+}
+
+.section-header h2 {
+  font-size: 22px;
+  color: #2c3e50;
+  font-weight: 700;
+}
+
+.total-rating {
+  display: flex;
+  align-items: center;
+}
+
+.stars {
+  color: #f8d568;
+  font-size: 10px;
+  margin-right: 10px;
+}
+
+.stars .active {
+  color: #f8d568;
+}
+
+.stars .inactive {
+  color: #e0e0e0;
+}
+
+.count {
+  font-size: 16px;
+  color: #6c757d;
+}
+
+/* 评价项样式 */
+.evaluation-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.evaluation-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.user-info {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.user-info .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 15px;
+  object-fit: cover;
+  border: 1px solid #eee;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.username {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 15px;
+  margin-bottom: 1px;
+}
+
+.timestamp {
+  color: #517779;
+  font-size: 14px;
+}
+
+/* 评价内容区域 */
+.content-section {
+  padding-left: 60px;
+}
+
+.comment {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.6;
+  margin: 6px 0;
+}
+
+/* 评价图片 */
+.evaluation-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.image-container {
+  width: 100%;
+  height: 140px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.image-container:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.evaluation-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .total-rating {
+    margin-top: 10px;
+  }
+
+  .content-section {
+    padding-left: 0;
+  }
+
+  .evaluation-images {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   }
 }
 </style>
