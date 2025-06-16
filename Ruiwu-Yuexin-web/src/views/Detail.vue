@@ -819,26 +819,28 @@ onMounted(() => {
 }
 /* 商品评价区域样式 */
 .evaluation-section {
-  margin-top: 50px;
+  margin-top: 10px;
   background-color: #fff;
   border-radius: 16px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
-  padding: 30px;
+  margin: 0 100px;
+  padding-left: 50px;
+  padding-right: 50px;
 }
 
 .section-header {
-  display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   border-bottom: 1px solid #f1f3f5;
-  padding-bottom: 20px;
+  padding-bottom: 10px;
 }
 
 .section-header h2 {
-  font-size: 22px;
+  font-size: 20px;
   color: #2c3e50;
   font-weight: 700;
+  padding-top: 30px;
 }
 
 .total-rating {
@@ -847,13 +849,13 @@ onMounted(() => {
 }
 
 .stars {
-  color: #f8d568;
+  color: #f65a5a;
   font-size: 10px;
   margin-right: 10px;
 }
 
 .stars .active {
-  color: #f8d568;
+  color: #f64343;
 }
 
 .stars .inactive {
