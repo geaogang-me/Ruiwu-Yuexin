@@ -1,4 +1,3 @@
-<!-- src/views/OrderList.vue -->
 <template>
   <div class="order-container">
     <div class="app-header">
@@ -6,40 +5,38 @@
         <i class="fas fa-box-open"></i>
         <h1>订单管理</h1>
       </div>
-      <el-button type="primary" plain class="back-button" @click="goBack">
+      <el-button plain class="back-button" @click="navigateTo('/home')">
         <i class="fas fa-arrow-left"></i> 返回
       </el-button>
     </div>
 
+    <!-- 筛选按钮 -->
     <div class="order-filter-container">
       <el-button
-        v-for="status in orderStatuses"
-        :key="status.name"
-        :class="[
-          'filter-button',
-          status.class,
-          { active: filterStatus === status.name },
-        ]"
-        @click="changeFilterStatus(status.name)"
+        v-for="s in filterStatuses"
+        :key="s.name"
+        :class="['filter-button', s.class, { active: filterStatus === s.name }]"
+        @click="onFilter(s.name)"
       >
-        {{ status.label }}
-        <span class="count-badge">
-          {{ getCount(status.name) }}
-        </span>
+        {{ s.label }}
+        <span class="count-badge">{{ countByStatus(s.name) }}</span>
       </el-button>
     </div>
+
+    <!-- 列表或加载中 -->
     <div class="orders-list-container">
-      <div class="loader-animation" v-if="loading">
+      <div v-if="loading" class="loader-animation">
         <div class="spinner"></div>
       </div>
 
-      <div class="orders-list" v-show="!loading">
+      <div v-else class="orders-list">
         <div
           v-for="order in filteredOrders"
           :key="order.id"
           class="order-card"
-          :class="{ 'new-item': isNewOrder(order.id) }"
+          :class="{ 'new-item': isNew(order.id) }"
         >
+          <!-- 头部信息 -->
           <div class="order-header">
             <div class="order-info">
               <div class="order-info-item">
@@ -55,297 +52,212 @@
                 <span class="info-value">¥{{ order.price }}</span>
               </div>
             </div>
-            <div
-              :class="[
-                'order-status',
-                `status-${getStatusClass(order.status)}`,
-              ]"
-            >
-              {{ getOrderStatus(order.status) }}
+            <div :class="['order-status', statusMap[order.status].class]">
+              {{ statusMap[order.status].label }}
             </div>
           </div>
 
+          <!-- 内容 & 操作按钮 -->
           <div class="order-content">
             <div class="product-info">
-              <img
-                :src="`data:image/png;base64,${order.goodImage}`"
-                class="product-image"
-                alt="商品图片"
-              />
+              <img :src="order.goodImageUrl" class="product-image" />
               <div class="product-details">
-                <h3 class="product-name">{{ order.goodName }}</h3>
+                <h3>{{ order.goodName }}</h3>
                 <div class="product-meta">
-                  <span>数量: {{ order.num }}</span>
-                  <span> · </span>
+                  <span>数量: {{ order.num }}</span> ·
                   <span>单价: ¥{{ order.unitPrice }}</span>
                 </div>
-                <div class="product-price">¥{{ order.price }}</div>
               </div>
             </div>
-
             <div class="order-summary">
-              <div class="total-price">总价: ¥{{ order.price }}</div>
-              <!-- 待支付状态：去支付 -->
               <el-button
                 v-if="order.status === 1"
                 type="primary"
-                class="act-button"
-                @click="goToPay(order.id)"
+                @click="navigateTo('/payment', { orderId: order.id })"
               >
                 去支付
               </el-button>
-              <!-- 已发货状态：确认收货 -->
               <el-button
-                v-if="order.status === 3"
+                v-else-if="order.status === 3"
                 type="primary"
-                class="action-button"
-                @click="confirmReceipt(order.id)"
+                @click="onConfirmReceipt(order.id)"
               >
                 确认收货
+              </el-button>
+              <el-button
+                v-else-if="order.status === 4"
+                type="primary"
+                @click="
+                  navigateTo('/evaluate', {
+                    orderId: order.id,
+                    goodId: order.goodId,
+                  })
+                "
+              >
+                去评价
               </el-button>
             </div>
           </div>
         </div>
-      </div>
 
-      <div v-if="!filteredOrders.length && !loading" class="empty-state">
-        <i class="fas fa-inbox"></i>
-        <h3>暂无{{ filterStatusLabel }}订单</h3>
-        <p>您还没有任何{{ filterStatusLabel }}订单记录</p>
+        <div v-if="!filteredOrders.length" class="empty-state">
+          <i class="fas fa-inbox"></i>
+          <h3>暂无{{ currentLabel }}订单</h3>
+          <p>您还没有任何{{ currentLabel }}订单记录</p>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/plugins/axios";
 import Swal from "sweetalert2";
 
+// （A）用于筛选按钮的状态数组
+const filterStatuses = [
+  { name: null, label: "所有订单", class: "all-orders" },
+  { name: 1, label: "待付款", class: "Pending-payment" },
+  { name: 2, label: "待发货", class: "pending-shipment" },
+  { name: 3, label: "待收货", class: "Shipped" },
+  { name: 4, label: "待评价", class: "no_comment" },
+];
+
+// （B）用于卡片头部映射所有状态
+const statusMap = {
+  1: { label: "待付款", class: "Pending-payment" },
+  2: { label: "待发货", class: "pending-shipment" },
+  3: { label: "待收货", class: "Shipped" },
+  4: { label: "待评价", class: "no_comment" },
+  5: { label: "已完成", class: "completed" },
+};
+
+// 通用弹窗
+const swalSuccess = (msg) =>
+  Swal.fire({
+    icon: "success",
+    title: msg,
+    timer: 1000,
+    showConfirmButton: false,
+  });
+const swalError = (msg) =>
+  Swal.fire({
+    icon: "error",
+    title: msg,
+    timer: 1500,
+    showConfirmButton: false,
+  });
+const confirmDialog = (title, text) =>
+  Swal.fire({
+    title,
+    text,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+  });
+
+// 组合式状态
 const router = useRouter();
 const allOrders = ref([]);
 const filterStatus = ref(null);
 const loading = ref(false);
-const displayedOrders = ref(new Set());
-const newOrders = ref(new Set());
+const displayed = ref(new Set());
+const newItems = ref(new Set());
 
-// 订单状态定义
-const orderStatuses = [
-  {
-    name: null,
-    label: "所有订单",
-    class: "all-orders",
-  },
-  {
-    name: 1,
-    label: "待支付",
-    class: "Pending-payment",
-  },
-  {
-    name: 2,
-    label: "待发货",
-    class: "pending-shipment",
-  },
-  {
-    name: 3,
-    label: "已发货",
-    class: "Shipped",
-  },
-  {
-    name: 4,
-    label: "已完成",
-    class: "completed",
-  },
-];
+// 计算属性
+const filteredOrders = computed(() =>
+  filterStatus.value == null
+    ? allOrders.value
+    : allOrders.value.filter((o) => o.status === filterStatus.value)
+);
 
-const filteredOrders = computed(() => {
-  if (filterStatus.value === null) {
-    return allOrders.value;
-  }
-  return allOrders.value.filter((order) => order.status === filterStatus.value);
+const currentLabel = computed(() => {
+  const found = filterStatuses.find((s) => s.name === filterStatus.value);
+  return found ? found.label : "所有订单";
 });
 
-const filterStatusLabel = computed(() => {
-  const status = orderStatuses.find((s) => s.name === filterStatus.value);
-  return status ? status.label : "";
-});
+// 在 order 对象上挂 statusClass/statusLabel/url
+function enrichOrders(raw) {
+  return raw.map((o) => ({
+    ...o,
+    statusClass: statusMap[o.status]?.class || "",
+    statusLabel: statusMap[o.status]?.label || "未知",
+    goodImageUrl: `data:image/png;base64,${o.goodImage}`,
+  }));
+}
 
-const getStatusClass = (status) => {
-  switch (status) {
-    case 1:
-      return "Pending-payment";
-    case 2:
-      return "pending-shipment";
-    case 3:
-      return "Shipped";
-    case 4:
-      return "completed";
-    default:
-      return "";
-  }
-};
-
-const changeFilterStatus = (status) => {
-  loading.value = true;
-
-  // 标记当前显示的所有订单为"旧"订单
-  allOrders.value.forEach((order) => {
-    displayedOrders.value.add(order.id);
-  });
-
-  filterStatus.value = status;
-
-  setTimeout(() => {
-    loading.value = false;
-    // 确保订单更新后，新显示的订单有动画
-    allOrders.value.forEach((order) => {
-      if (!displayedOrders.value.has(order.id)) {
-        newOrders.value.add(order.id);
-      }
-    });
-
-    // 清除之前标记的订单
-    displayedOrders.value = new Set();
-
-    // 清除新订单标记（4秒后）
-    setTimeout(() => {
-      newOrders.value.clear();
-    }, 4000);
-  }, 500);
-};
-
-const isNewOrder = (orderId) => {
-  return newOrders.value.has(orderId);
-};
-
-const fetchOrders = async () => {
+// 辅助函数
+async function withLoading(fn) {
   loading.value = true;
   try {
-    const userId = JSON.parse(localStorage.getItem("userInfo")).id;
-    const res = await api.get("/order/list", {
-      params: { userId },
-    });
-
-    if (res.data.code === "200") {
-      allOrders.value = res.data.data;
-
-      // 标记所有获取到的订单为"新"订单用于入场动画
-      res.data.data.forEach((order) => {
-        newOrders.value.add(order.id);
-      });
-
-      // 清除新订单标记（4秒后）
-      setTimeout(() => {
-        newOrders.value.clear();
-      }, 4000);
-    } else {
-      Swal.fire({
-        icon: "error",
-        title: "加载订单失败",
-        timer: 1000,
-        showConfirmButton: false,
-      });
-    }
-  } catch (e) {
-    console.error(e);
-    Swal.fire({
-      icon: "error",
-      title: "获取订单出错",
-      timer: 1000,
-      showConfirmButton: false,
-    });
+    await fn();
   } finally {
-    setTimeout(() => {
-      loading.value = false;
-    }, 800);
+    loading.value = false;
   }
-};
+}
 
-const getCount = (status) => {
-  if (status === null) return allOrders.value.length;
+function markNewItems(prev, list) {
+  list.forEach((o) => {
+    if (!prev.has(o.id)) newItems.value.add(o.id);
+  });
+  prev.clear();
+  setTimeout(() => newItems.value.clear(), 4000);
+}
 
-  return allOrders.value.filter((order) => order.status === status).length;
-};
+function isNew(id) {
+  return newItems.value.has(id);
+}
 
-const goBack = () => {
-  router.push("/home");
-};
+// 业务逻辑
+async function fetchOrders() {
+  await withLoading(async () => {
+    const userId = JSON.parse(localStorage.getItem("userInfo")).id;
+    const res = await api.get("/order/list", { params: { userId } });
+    if (res.data.code !== "200") return swalError("加载订单失败");
+    const enriched = enrichOrders(res.data.data);
+    markNewItems(displayed.value, enriched);
+    allOrders.value = enriched;
+  });
+}
 
-const getOrderStatus = (status) => {
-  switch (status) {
-    case 1:
-      return "待支付";
-    case 2:
-      return "待发货";
-    case 3:
-      return "已发货";
-    case 4:
-      return "已完成";
-    default:
-      return "未知";
-  }
-};
+function countByStatus(status) {
+  return status == null
+    ? allOrders.value.length
+    : allOrders.value.filter((o) => o.status === status).length;
+}
 
-const goToPay = (orderId) => {
-  router.push({ path: "/payment", query: { orderId } });
-};
+function onFilter(status) {
+  allOrders.value.forEach((o) => displayed.value.add(o.id));
+  filterStatus.value = status;
+  markNewItems(displayed.value, filteredOrders.value);
+}
 
-const confirmReceipt = async (orderId) => {
-  try {
-    const result = await Swal.fire({
-      title: "确认收货？",
-      text: "请确认您已经收到商品！",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "是的，确认收货",
-      cancelButtonText: "取消",
-    });
-    if (result.isConfirmed) {
-      const res = await api.post(`/order/confirmReceipt/${orderId}`);
-      if (res.data.code === "200") {
-        Swal.fire({
-          icon: "success",
-          title: "确认收货成功",
-          timer: 1000,
-          showConfirmButton: false,
-        });
+function navigateTo(path, query = {}) {
+  router.push({ path, query });
+}
 
-        // 更新订单状态
-        const order = allOrders.value.find((o) => o.id === orderId);
-        if (order) {
-          order.status = 4;
-        }
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "确认收货失败",
-          timer: 1000,
-          showConfirmButton: false,
-        });
-      }
-    }
-  } catch (e) {
-    console.error(e);
-    Swal.fire({
-      icon: "error",
-      title: "确认收货出错",
-      timer: 1000,
-      showConfirmButton: false,
-    });
-  }
-};
+async function onConfirmReceipt(orderId) {
+  const { isConfirmed } = await confirmDialog(
+    "确认收货？",
+    "请确认您已收到商品"
+  );
+  if (!isConfirmed) return;
+  await withLoading(async () => {
+    const res = await api.post(`/order/confirmReceipt/${orderId}`);
+    if (res.data.code !== "200") return swalError("确认收货失败");
+    const idx = allOrders.value.findIndex((o) => o.id === orderId);
+    if (idx > -1) allOrders.value[idx].status = 4;
+    swalSuccess("确认收货成功");
+    navigateTo("/evaluate", { orderId, goodId: allOrders.value[idx].goodId });
+  });
+}
 
 onMounted(fetchOrders);
-onMounted(() => {
-  document.body.style.overflow = "hidden";
-});
-onUnmounted(() => {
-  document.body.style.overflow = "";
-});
 </script>
+
 
 <style scoped>
 .order-container {
@@ -355,116 +267,67 @@ onUnmounted(() => {
   max-width: 1200px;
   margin: 0 auto;
 }
-.orders-list-container {
-  max-height: calc(100vh - 250px);
-  overflow-y: scroll;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(128, 128, 128, 0.5) transparent;
-  scroll-behavior: smooth;
-  padding-right: 8px;
-}
-
-.orders-list-container::-webkit-scrollbar {
-  width: 8px;
-}
-.orders-list-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-.orders-list-container::-webkit-scrollbar-thumb {
-  background-color: rgba(128, 128, 128, 0.2);
-  border-radius: 4px;
-}
-.orders-list-container:hover::-webkit-scrollbar-thumb {
-  background-color: rgba(128, 128, 128, 0.5);
-}
-
-/* 调整空状态的高度 */
 
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 30px;
-  padding: 15px 0;
+  padding-bottom: 15px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
-
 .app-title {
   display: flex;
   align-items: center;
   gap: 15px;
 }
-
-.app-title h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #2c3e50;
-}
-
 .app-title i {
   background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-size: 32px;
 }
-
-/* 返回按钮样式 */
 .back-button {
   background: #fff;
   border-radius: 12px;
   padding: 12px 25px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
   border: 1px solid #eaeef5;
-  transition: all 0.3s ease;
   font-weight: 600;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
-
 .back-button:hover {
-  box-shadow: 0 8px 25px rgba(39, 102, 245, 0.2);
   transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(39, 102, 245, 0.2);
   color: #2766f5;
 }
 
-/* 订单过滤按钮 */
 .order-filter-container {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
   margin-bottom: 30px;
-  padding: 20px;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
 }
-
 .filter-button {
   flex: 1;
-  min-width: 150px;
+  min-width: 120px;
   border-radius: 10px;
   padding: 15px 20px;
   font-weight: 600;
-  transition: transform 0.3s ease, box-shadow 0.3s ease,
-    background 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   text-align: center;
-  box-shadow: 0 4px 6px rgba(50, 50, 93, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
-  border: none;
-  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
-  border: none;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
-
 .filter-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 7px 14px rgba(0, 0, 0, 0.1);
 }
-
 .filter-button.active {
   box-shadow: 0 4px 15px rgba(39, 102, 245, 0.3);
   transform: scale(1.02) translateY(-2px);
 }
-
 .filter-button::after {
   content: "";
   position: absolute;
@@ -473,95 +336,67 @@ onUnmounted(() => {
   width: 0;
   height: 0;
   background: rgba(255, 255, 255, 0.3);
-  border-radius: 100%;
-  transform: translate(-50%, -50%);
+  border-radius: 50%;
   transition: width 0.5s ease, height 0.5s ease;
 }
-
 .filter-button:active::after {
   width: 500px;
   height: 500px;
 }
-
-.all-orders {
-  background: linear-gradient(to right, #ece9e6, #ffffff);
-  color: #6c757d;
-}
-
-.Pending-payment {
-  background: linear-gradient(to right, #f6d365, #ef4444);
-  color: #fff;
-}
-
-.pending-shipment {
-  background: linear-gradient(to right, #f6d365, #fda085);
-  color: #fff;
-}
-
-.shipped {
-  background: linear-gradient(to right, #5ee7df, #6a87d5);
-  color: #fff;
-}
-
-.completed {
-  background: linear-gradient(to right, #87e3f4, #90ea99);
-  color: #fff;
-}
-
 .count-badge {
   position: absolute;
   top: -8px;
   right: -8px;
+  width: 25px;
+  height: 25px;
+  line-height: 25px;
   background: #fff;
   color: #2766f5;
   border: 2px solid #2766f5;
   border-radius: 50%;
-  width: 25px;
-  height: 25px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-size: 12px;
   font-weight: bold;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  animation: popIn 0.3s ease;
 }
 
-@keyframes popIn {
-  0% {
-    transform: scale(0);
-  }
-  80% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
+.orders-list-container {
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  padding-right: 8px;
+}
+.loader-animation {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(39, 102, 245, 0.3);
+  border-top: 3px solid #2766f5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-/* 订单卡片 */
 .orders-list {
   position: relative;
-  transition: height 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
-
 .order-card {
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
   margin-bottom: 25px;
-  overflow: hidden;
-  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.4s ease,
-    box-shadow 0.3s ease;
-  transform-origin: top center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
   border: 1px solid #edf2f9;
+  transition: transform 0.3s, box-shadow 0.3s, opacity 0.3s;
+}
+.order-card.new-item {
   animation: fadeIn 0.5s ease forwards;
 }
-
-/* .order-card.new-item {
-  animation: highlight 1.5s ease;
-} */
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -572,198 +407,79 @@ onUnmounted(() => {
     transform: translateY(0);
   }
 }
-
-@keyframes highlight {
-  0% {
-    background-color: rgba(255, 247, 175, 0.1);
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  30% {
-    background-color: rgba(255, 247, 175, 0.3);
-    opacity: 1;
-  }
-  100% {
-    background-color: white;
-    transform: translateY(0);
-  }
-}
-
 .order-card:hover {
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
   transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
 }
 
-/* 订单头部 */
 .order-header {
-  padding: 20px 25px;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   justify-content: space-between;
-  gap: 15px;
+  align-items: center;
+  padding: 20px 25px;
   background: #f8fafc;
   border-bottom: 1px solid #edf2f9;
-  transition: all 0.3s ease;
 }
-
 .order-info {
   display: flex;
-  flex-wrap: wrap;
   gap: 20px;
-  align-items: center;
 }
-
 .order-info-item {
   display: flex;
   flex-direction: column;
-  min-width: 150px;
 }
-
 .info-label {
   font-size: 12px;
   color: #6c757d;
-  font-weight: 500;
 }
-
 .info-value {
   font-size: 15px;
   font-weight: 600;
   color: #2c3e50;
   margin-top: 5px;
-  transition: all 0.3s ease;
 }
-
 .order-status {
   padding: 6px 15px;
   border-radius: 20px;
   font-weight: 600;
   font-size: 13px;
-  transition: all 0.3s ease;
 }
 
-.status-Pending-payment {
-  background-color: rgba(235, 113, 85, 0.15);
-  color: #fb1212;
-}
-.status-pending-shipment {
-  background-color: rgba(253, 182, 27, 0.15);
-  color: #fdb61b;
-}
-
-.status-shipped {
-  background-color: rgba(33, 150, 243, 0.15);
-  color: #2196f3;
-}
-
-.status-completed {
-  background-color: rgba(76, 175, 80, 0.15);
-  color: #4caf50;
-}
-
-/* 订单内容 */
 .order-content {
   padding: 25px;
-  transition: all 0.3s ease;
 }
-
 .product-info {
   display: flex;
   gap: 20px;
-  align-items: center;
   margin-bottom: 20px;
-  padding-bottom: 20px;
   border-bottom: 1px solid #f1f5f9;
-  transition: all 0.3s ease;
+  padding-bottom: 20px;
 }
-
 .product-image {
   width: 80px;
   height: 80px;
   border-radius: 12px;
   object-fit: cover;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   border: 1px solid #f1f5f9;
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
-
-.product-details {
-  flex: 1;
-  transition: all 0.3s ease;
-}
-
-.product-name {
-  font-weight: 700;
+.product-details h3 {
   font-size: 18px;
+  font-weight: 700;
   color: #2c3e50;
   margin-bottom: 5px;
-  transition: all 0.3s ease;
 }
-
 .product-meta {
   color: #6c757d;
   font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.product-price {
-  font-size: 17px;
-  font-weight: 700;
-  color: #2766f5;
-  margin-top: 8px;
-  transition: all 0.3s ease;
 }
 
 .order-summary {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #f1f5f9;
-  transition: all 0.3s ease;
+  justify-content: flex-end; /* 水平右对齐 */
+  gap: 15px; /* 各按钮间距 */
 }
 
-.total-price {
-  font-weight: 700;
-  font-size: 20px;
-  color: #2c3e50;
-  transition: all 0.3s ease;
-}
-
-.action-button {
-  padding: 10px 25px;
-  border-radius: 10px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(39, 102, 245, 0.25);
-  background: linear-gradient(to right, #2766f5, #3a8dff);
-  border: none;
-  color: white;
-}
-
-.action-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 7px 15px rgba(39, 102, 245, 0.35);
-}
-
-.act-button {
-  padding: 10px 25px;
-  border-radius: 10px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(39, 102, 245, 0.25);
-  background: linear-gradient(to right, #59d04c, #39cc5b);
-  border: none;
-  color: white;
-}
-
-.act-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 7px 15px rgba(39, 102, 245, 0.35);
-}
-
-/* 空状态 */
 .empty-state {
   text-align: center;
   padding: 80px 20px;
@@ -771,87 +487,61 @@ onUnmounted(() => {
   border-radius: 16px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
   margin-top: 30px;
-  animation: fadeIn 0.8s ease forwards;
 }
-
 .empty-state i {
   font-size: 70px;
   color: #d1e0fc;
   margin-bottom: 25px;
-  transition: all 0.5s ease;
 }
-
 .empty-state h3 {
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 15px;
   color: #2c3e50;
-  transition: all 0.5s ease;
 }
-
 .empty-state p {
-  max-width: 500px;
-  margin: 0 auto;
   color: #6c757d;
   font-size: 16px;
   line-height: 1.6;
-  transition: all 0.5s ease;
+}
+/* 订单状态不同类型的背景色 & 文字色保留 */
+.status-Pending-payment,
+.Pending-payment {
+  background: linear-gradient(to right, #f6d365, #ef4444);
+  color: #fff;
+}
+.status-pending-shipment,
+.pending-shipment {
+  background: linear-gradient(to right, #f6d365, #fda085);
+  color: #fff;
+}
+.status-Shipped,
+.Shipped {
+  background: linear-gradient(to right, #5ee7df, #6a87d5);
+  color: #fff;
+}
+.status-no_comment,
+.no_comment {
+  background: linear-gradient(to right, #87e3f4, #90ea99);
+  color: #fff;
+}
+.status-completed,
+.completed {
+  background: linear-gradient(to right, #87e3f4, #90ea99);
+  color: #fff;
 }
 
-/* 加载动画 */
-.loader-animation {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 10;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 3px solid rgba(39, 102, 245, 0.3);
-  border-radius: 50%;
-  border-top: 3px solid #2766f5;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* 响应式设计 */
+/* 响应式 */
 @media (max-width: 768px) {
-  .app-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
-  }
-
-  .order-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .order-info {
-    width: 100%;
-  }
-
-  .filter-button {
-    min-width: 120px;
-    padding: 12px 15px;
-    font-size: 14px;
-  }
-
+  .app-header,
+  .order-header,
   .order-summary {
     flex-direction: column;
     align-items: flex-start;
-    gap: 20px;
+    gap: 15px;
+  }
+  .product-info {
+    flex-direction: column;
   }
 }
 </style>
