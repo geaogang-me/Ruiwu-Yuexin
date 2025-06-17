@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gag.RuiwuYuexin.mapper.EvaluateMapper">
+
+    <resultMap id="EvaluateResultMap" type="com.gag.RuiwuYuexin.entity.Evaluate">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="goodId" column="good_id"/>
+        <result property="starLevel" column="star_level"/>
+        <result property="comment" column="comment"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <insert id="insertEvaluate" parameterType="com.gag.RuiwuYuexin.entity.Evaluate" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_evaluates (user_id, good_id, star_level, comment, create_time)
+        VALUES (#{userId}, #{goodId}, #{starLevel}, #{comment}, #{createTime})
+    </insert>
+
+    <select id="findEvaluatesByGoodId" resultMap="EvaluateResultMap" parameterType="long">
+        SELECT id, user_id, good_id, star_level, comment, create_time
+        FROM t_evaluates
+        WHERE good_id = #{goodId}
+    </select>
+
+    <resultMap id="EvaluationImageDTOResultMap" type="com.gag.RuiwuYuexin.dto.EvaluationImageDTO">
+        <id property="id" column="id"/>
+        <result property="imageData" column="image_data"/>
+        <result property="sortOrder" column="sort_order"/>
+    </resultMap>
+
+    <select id="findImagesByEvaluateId" resultMap="EvaluationImageDTOResultMap" parameterType="long">
+        SELECT id, TO_BASE64(image_data) AS image_data, sort_order
+        FROM t_evaluate_images
+        WHERE evaluate_id = #{evaluateId}
+        ORDER BY sort_order
+    </select>
+
+</mapper>
