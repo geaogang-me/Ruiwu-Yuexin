@@ -16,6 +16,7 @@ public class OrderDetailDto {
     private LocalDateTime created;    // 下单时间
 
     // 以下是商品信息
+    private Long goodId;
     private String goodName;
     private byte[] goodImage;      // 如果是 Base64，可直接放
     private BigDecimal unitPrice;     // 单价

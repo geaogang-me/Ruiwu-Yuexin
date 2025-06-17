@@ -65,6 +65,15 @@ public class OrderServiceImpl implements OrderService {
         }
         return false;
     }
-
+    @Override
+    public boolean completeEvaluation(Long orderId) {
+        Order order = orderMapper.selectById(orderId);
+        if (order != null && order.getStatus() == 4) { // 只允许从"已完成"状态更新
+            order.setStatus(5); // 5 表示已评价
+            orderMapper.updateById(order);
+            return true;
+        }
+        return false;
+    }
 
 }

@@ -13,6 +13,7 @@
         o.price,
         o.status,
         o.created,
+        o.good_id,
         g.good_name,
         g.good_image,
         g.price AS unit_price

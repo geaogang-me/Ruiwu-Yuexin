@@ -66,5 +66,17 @@ public class OrderController {
             return Result.error("确认收货失败");
         }
     }
+    @PostMapping("/evaluate/{orderId}")
+    public Result<String> completeEvaluation(@PathVariable Long orderId) {
+        if (orderId == null) {
+            return Result.error("订单ID不能为空");
+        }
+        boolean success = orderService.completeEvaluation(orderId);
+        if (success) {
+            return Result.success("评价完成，订单状态已更新");
+        } else {
+            return Result.error("更新订单状态失败");
+        }
+    }
 
 }
