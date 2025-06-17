@@ -73,6 +73,7 @@
               <el-button
                 v-if="order.status === 1"
                 type="primary"
+                class="gopay-button"
                 @click="navigateTo('/payment', { orderId: order.id })"
               >
                 去支付
@@ -80,6 +81,7 @@
               <el-button
                 v-else-if="order.status === 3"
                 type="primary"
+                class="takegoods-button"
                 @click="onConfirmReceipt(order.id)"
               >
                 确认收货
@@ -87,6 +89,7 @@
               <el-button
                 v-else-if="order.status === 4"
                 type="primary"
+                class="gocomment-button"
                 @click="
                   navigateTo('/evaluate', {
                     orderId: order.id,
@@ -531,7 +534,36 @@ onMounted(fetchOrders);
   background: linear-gradient(to right, #87e3f4, #90ea99);
   color: #fff;
 }
-
+.gopay-button {
+  padding: 10px 25px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(39, 102, 245, 0.25);
+  background: linear-gradient(to right, #59d04c, #39cc5b);
+  border: none;
+  color: white;
+}
+.takegoods-button {
+  padding: 10px 25px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(39, 102, 245, 0.25);
+  background: linear-gradient(to right, #b84cd0, #a539cc);
+  border: none;
+  color: white;
+}
+.gocomment-button {
+  padding: 10px 25px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(39, 102, 245, 0.25);
+  background: linear-gradient(to right, #4cc9d0, #39bbcc);
+  border: none;
+  color: white;
+}
 /* 响应式 */
 @media (max-width: 768px) {
   .app-header,

@@ -138,7 +138,7 @@
               </el-button>
 
               <el-button class="cancel-button" @click="goBack">
-                <i class="fas fa-times"></i> 取消
+                <i class="fas fa-times"></i> 关闭
               </el-button>
             </div>
           </el-form>
