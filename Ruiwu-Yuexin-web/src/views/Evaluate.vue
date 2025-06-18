@@ -1,75 +1,89 @@
 <template>
-  <div class="evaluate-container">
-    <div class="app-header">
-      <i class="fas fa-comment"></i>
-      <h1>商品评价</h1>
-      <el-button type="primary" plain class="back-button" @click="goBack">
-        <i class="fas fa-arrow-left"></i> 返回
-      </el-button>
-    </div>
-
-    <div class="evaluate-content">
-      <!-- 商品信息 -->
-      <div class="product-section" v-if="good">
-        <div class="product-image">
-          <img :src="good.image" alt="商品图片" />
-        </div>
-        <div class="product-info">
-          <h3>{{ good.name }}</h3>
-          <div class="price">¥{{ good.price }}</div>
-        </div>
+  <div class="evaluate-wrapper">
+    <div class="evaluate-container">
+      <div class="app-header">
+        <img
+          src="@/assets/icon/评论.svg"
+          alt="评论"
+          width="45px"
+          height="45px"
+        />
+        <h1>商品评价</h1>
+        <el-button type="primary" plain class="back-button" @click="goBack">
+          <i class="fas fa-arrow-left"></i> 返回
+        </el-button>
       </div>
 
-      <!-- 评价表单 -->
-      <div class="evaluate-form">
-        <div class="stars">
-          <h4>请评分：</h4>
-          <div class="star-rating">
-            <span v-for="star in 5" :key="star" @click="setRating(star)">
-              <i
-                :class="['fas fa-star', star <= rating ? 'active' : 'inactive']"
-              ></i>
-            </span>
+      <div class="evaluate-content">
+        <!-- 商品信息 -->
+        <div class="product-section" v-if="good">
+          <div class="product-image">
+            <img :src="good.image" alt="商品图片" />
+          </div>
+          <div class="product-info">
+            <h3>{{ good.name }}</h3>
+            <div class="price">¥{{ good.price }}</div>
           </div>
         </div>
 
-        <div class="comment">
-          <h4>评价内容：</h4>
-          <el-input
-            type="textarea"
-            :rows="4"
-            placeholder="请输入您的评价"
-            v-model="comment"
-          ></el-input>
-        </div>
+        <!-- 评价表单 -->
+        <div class="evaluate-form">
+          <div class="stars">
+            <h4>请评分：</h4>
+            <div class="star-rating">
+              <span v-for="star in 5" :key="star" @click="setRating(star)">
+                <i
+                  :class="[
+                    'fas fa-star',
+                    star <= rating ? 'active' : 'inactive',
+                  ]"
+                ></i>
+              </span>
+            </div>
+          </div>
 
-        <div class="image-upload">
-          <h4>上传图片（最多4张）：</h4>
-          <el-upload
-            action=""
-            list-type="picture-card"
-            :auto-upload="false"
-            :on-change="handleImageChange"
-            :on-remove="handleImageRemove"
-            :file-list="fileList"
-            :limit="4"
-            :multiple="true"
-          >
-            <i class="el-icon-plus"></i>
-            <template #tip>
-              <div class="upload-tip">支持上传图片文件</div>
-            </template>
-          </el-upload>
-        </div>
+          <div class="comment">
+            <h4>评价内容：</h4>
+            <el-input
+              type="textarea"
+              :rows="4"
+              placeholder="请输入您的评价"
+              v-model="comment"
+            ></el-input>
+          </div>
 
-        <el-button
-          type="primary"
-          class="submit-button"
-          @click="submitEvaluate"
-          :disabled="rating === 0"
-        >
-          提交评价
-        </el-button>
+          <div class="image-upload">
+            <h4>上传图片（最多4张）：</h4>
+            <el-upload
+              action=""
+              list-type="picture-card"
+              :auto-upload="false"
+              :on-change="handleImageChange"
+              :on-remove="handleImageRemove"
+              :file-list="fileList"
+              :limit="4"
+              :multiple="true"
+            >
+              <i class="el-icon-plus"></i>
+              <template #tip>
+                <div class="upload-tip">支持上传图片文件</div>
+              </template>
+            </el-upload>
+          </div>
+          <div class="button-group">
+            <el-button type="primary" class="submit-button" @click="goBack">
+              暂不评价
+            </el-button>
+            <el-button
+              type="primary"
+              class="submit-button"
+              @click="submitEvaluate"
+              :disabled="rating === 0"
+            >
+              提交评价
+            </el-button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -197,8 +211,21 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 新增这个外层容器样式 */
+.evaluate-wrapper {
+  height: 100vh;
+  background: #f5f5f5;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* 如果你想让它垂直居中，用 center */
+  padding: 20px 0;
+}
+
 .evaluate-container {
-  max-width: 800px;
+  max-height: 95vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  min-width: 700px;
   margin: 0 auto;
   padding: 20px;
   background-color: #fff;
@@ -210,8 +237,8 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
@@ -222,7 +249,11 @@ onMounted(() => {
   font-weight: 700;
   color: #2c3e50;
 }
-
+.button-group {
+  display: flex;
+  gap: 30px;
+  justify-content: flex-end;
+}
 .app-header i {
   margin-right: 10px;
   color: #3498db;

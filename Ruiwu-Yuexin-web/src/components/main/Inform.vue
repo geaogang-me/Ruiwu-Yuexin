@@ -1,199 +1,207 @@
 <template>
-  <div class="form-container">
-    <!-- 头部导航栏 -->
-    <div class="app-header">
-      <div class="app-title">
-        <i class="fas fa-user-cog"></i>
-        <h1>个人信息管理</h1>
+  <div class="wapper-container">
+    <div class="form-container">
+      <!-- 头部导航栏 -->
+      <div class="app-header">
+        <div class="app-title">
+          <i class="fas fa-user-cog"></i>
+          <h1>个人信息管理</h1>
+        </div>
+        <el-button type="primary" plain class="back-button" @click="goBack">
+          <i class="fas fa-arrow-left"></i> 返回首页
+        </el-button>
       </div>
-      <el-button type="primary" plain class="back-button" @click="goBack">
-        <i class="fas fa-arrow-left"></i> 返回首页
-      </el-button>
-    </div>
 
-    <!-- 主内容区 -->
-    <div class="form-content-container">
-      <div class="form-card">
-        <!-- 用户头像上传区域 -->
-        <div class="avatar-section">
-          <div class="avatar-wrapper">
-            <div class="avatar-preview">
-              <img v-if="form.avatar" :src="form.avatar" class="avatar-image" />
-              <div v-else class="avatar-placeholder">
-                <i class="fas fa-user"></i>
+      <!-- 主内容区 -->
+      <div class="form-content-container">
+        <div class="form-card">
+          <!-- 用户头像上传区域 -->
+          <div class="avatar-section">
+            <div class="avatar-wrapper">
+              <div class="avatar-preview">
+                <img
+                  v-if="form.avatar"
+                  :src="form.avatar"
+                  class="avatar-image"
+                />
+                <div v-else class="avatar-placeholder">
+                  <i class="fas fa-user"></i>
+                </div>
               </div>
+              <el-upload
+                class="avatar-uploader"
+                :show-file-list="false"
+                :before-upload="beforeAvatarUpload"
+              >
+                <el-button type="primary" plain>
+                  <i class="fas fa-camera"></i> 更换头像
+                </el-button>
+              </el-upload>
             </div>
-            <el-upload
-              class="avatar-uploader"
-              :show-file-list="false"
-              :before-upload="beforeAvatarUpload"
+          </div>
+
+          <!-- 表单内容 -->
+          <div class="form-sections">
+            <el-form
+              ref="userFormRef"
+              :model="form"
+              :rules="baseRules"
+              label-width="120px"
+              label-position="right"
             >
-              <el-button type="primary" plain>
-                <i class="fas fa-camera"></i> 更换头像
-              </el-button>
-            </el-upload>
+              <!-- 基础信息卡片 -->
+              <div class="form-section-card">
+                <div class="section-header">
+                  <div class="section-icon">
+                    <i class="fas fa-user-circle"></i>
+                  </div>
+                  <h2>基本资料</h2>
+                </div>
+                <div class="section-body">
+                  <div class="form-row">
+                    <el-form-item label="用户名" prop="username">
+                      <el-input
+                        v-model="form.username"
+                        clearable
+                        placeholder="请输入用户名"
+                      />
+                    </el-form-item>
+                  </div>
+
+                  <div class="form-row">
+                    <el-form-item label="性别" prop="sex">
+                      <el-radio-group v-model="form.sex">
+                        <el-radio label="男" />
+                        <el-radio label="女" />
+                        <el-radio label="保密" />
+                      </el-radio-group>
+                    </el-form-item>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 联系信息卡片 -->
+              <div class="form-section-card">
+                <div class="section-header">
+                  <div class="section-icon">
+                    <i class="fas fa-address-book"></i>
+                  </div>
+                  <h2>联系信息</h2>
+                </div>
+                <div class="section-body">
+                  <div class="form-row">
+                    <el-form-item label="手机号" prop="phone">
+                      <el-input
+                        v-model="form.phone"
+                        clearable
+                        placeholder="请输入手机号"
+                      />
+                    </el-form-item>
+                  </div>
+
+                  <div class="form-row">
+                    <el-form-item label="邮箱" prop="email">
+                      <el-input
+                        v-model="form.email"
+                        clearable
+                        placeholder="请输入邮箱"
+                      />
+                    </el-form-item>
+                  </div>
+
+                  <div class="form-row">
+                    <el-form-item label="地址" prop="address">
+                      <el-input
+                        v-model="form.address"
+                        type="textarea"
+                        :rows="3"
+                        clearable
+                        placeholder="请输入详细地址"
+                      />
+                    </el-form-item>
+                  </div>
+                </div>
+              </div>
+              <div class="form-section-card">
+                <el-button
+                  type="info"
+                  class="change-password-button"
+                  @click="passwordDialogVisible = true"
+                >
+                  <i class="fas fa-key"></i> 修改密码
+                </el-button>
+              </div>
+
+              <!-- 表单操作按钮 -->
+              <div class="form-actions">
+                <el-button
+                  type="primary"
+                  class="submit-button"
+                  @click="submitForm"
+                >
+                  <i class="fas fa-save"></i> 保存修改
+                </el-button>
+
+                <el-button class="cancel-button" @click="goBack">
+                  <i class="fas fa-times"></i> 关闭
+                </el-button>
+              </div>
+            </el-form>
           </div>
         </div>
-
-        <!-- 表单内容 -->
-        <div class="form-sections">
-          <el-form
-            ref="userFormRef"
-            :model="form"
-            :rules="baseRules"
-            label-width="120px"
-            label-position="right"
-          >
-            <!-- 基础信息卡片 -->
-            <div class="form-section-card">
-              <div class="section-header">
-                <div class="section-icon">
-                  <i class="fas fa-user-circle"></i>
-                </div>
-                <h2>基本资料</h2>
-              </div>
-              <div class="section-body">
-                <div class="form-row">
-                  <el-form-item label="用户名" prop="username">
-                    <el-input
-                      v-model="form.username"
-                      clearable
-                      placeholder="请输入用户名"
-                    />
-                  </el-form-item>
-                </div>
-
-                <div class="form-row">
-                  <el-form-item label="性别" prop="sex">
-                    <el-radio-group v-model="form.sex">
-                      <el-radio label="男" />
-                      <el-radio label="女" />
-                      <el-radio label="保密" />
-                    </el-radio-group>
-                  </el-form-item>
-                </div>
-              </div>
-            </div>
-
-            <!-- 联系信息卡片 -->
-            <div class="form-section-card">
-              <div class="section-header">
-                <div class="section-icon">
-                  <i class="fas fa-address-book"></i>
-                </div>
-                <h2>联系信息</h2>
-              </div>
-              <div class="section-body">
-                <div class="form-row">
-                  <el-form-item label="手机号" prop="phone">
-                    <el-input
-                      v-model="form.phone"
-                      clearable
-                      placeholder="请输入手机号"
-                    />
-                  </el-form-item>
-                </div>
-
-                <div class="form-row">
-                  <el-form-item label="邮箱" prop="email">
-                    <el-input
-                      v-model="form.email"
-                      clearable
-                      placeholder="请输入邮箱"
-                    />
-                  </el-form-item>
-                </div>
-
-                <div class="form-row">
-                  <el-form-item label="地址" prop="address">
-                    <el-input
-                      v-model="form.address"
-                      type="textarea"
-                      :rows="3"
-                      clearable
-                      placeholder="请输入详细地址"
-                    />
-                  </el-form-item>
-                </div>
-              </div>
-            </div>
-            <div class="form-section-card">
-              <el-button
-                type="info"
-                class="change-password-button"
-                @click="passwordDialogVisible = true"
-              >
-                <i class="fas fa-key"></i> 修改密码
-              </el-button>
-            </div>
-
-            <!-- 表单操作按钮 -->
-            <div class="form-actions">
-              <el-button
-                type="primary"
-                class="submit-button"
-                @click="submitForm"
-              >
-                <i class="fas fa-save"></i> 保存修改
-              </el-button>
-
-              <el-button class="cancel-button" @click="goBack">
-                <i class="fas fa-times"></i> 关闭
-              </el-button>
-            </div>
-          </el-form>
-        </div>
       </div>
     </div>
-  </div>
 
-  <!-- 修改密码对话框 -->
-  <el-dialog
-    v-model="passwordDialogVisible"
-    title="修改密码"
-    width="450px"
-    :close-on-click-modal="false"
-    @closed="resetPasswordForm"
-  >
-    <el-form
-      ref="passwordFormRef"
-      :model="passwordForm"
-      :rules="passwordRules"
-      label-width="100px"
+    <!-- 修改密码对话框 -->
+    <el-dialog
+      v-model="passwordDialogVisible"
+      title="修改密码"
+      width="450px"
+      :close-on-click-modal="false"
+      @closed="resetPasswordForm"
     >
-      <el-form-item label="原密码" prop="oldPassword">
-        <el-input
-          v-model="passwordForm.oldPassword"
-          type="password"
-          show-password
-          placeholder="请输入原密码"
-        />
-      </el-form-item>
+      <el-form
+        ref="passwordFormRef"
+        :model="passwordForm"
+        :rules="passwordRules"
+        label-width="100px"
+      >
+        <el-form-item label="原密码" prop="oldPassword">
+          <el-input
+            v-model="passwordForm.oldPassword"
+            type="password"
+            show-password
+            placeholder="请输入原密码"
+          />
+        </el-form-item>
 
-      <el-form-item label="新密码" prop="newPassword">
-        <el-input
-          v-model="passwordForm.newPassword"
-          type="password"
-          show-password
-          placeholder="请输入新密码"
-        />
-      </el-form-item>
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input
+            v-model="passwordForm.newPassword"
+            type="password"
+            show-password
+            placeholder="请输入新密码"
+          />
+        </el-form-item>
 
-      <el-form-item label="确认密码" prop="confirmPassword">
-        <el-input
-          v-model="passwordForm.confirmPassword"
-          type="password"
-          show-password
-          placeholder="请再次输入新密码"
-        />
-      </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input
+            v-model="passwordForm.confirmPassword"
+            type="password"
+            show-password
+            placeholder="请再次输入新密码"
+          />
+        </el-form-item>
 
-      <div style="display: flex; justify-content: flex-end; margin-top: 20px">
-        <el-button @click="passwordDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitPasswordChange">确定</el-button>
-      </div>
-    </el-form>
-  </el-dialog>
+        <div style="display: flex; justify-content: flex-end; margin-top: 20px">
+          <el-button @click="passwordDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitPasswordChange"
+            >确定</el-button
+          >
+        </div>
+      </el-form>
+    </el-dialog>
+  </div>
 </template>
 
 <script setup>
@@ -484,9 +492,12 @@ onMounted(() => {
 
 <style scoped>
 .form-container {
+  height: 100vh;
   padding: 20px;
-  max-width: 1000px;
+  max-width: 700px;
   margin: 0 auto;
+  overflow-y: auto; /* 添加这一行，启用垂直滚动 */
+  box-sizing: border-box; /* 确保 padding 不会撑破容器 */
 }
 
 /* 头部导航栏样式 */
