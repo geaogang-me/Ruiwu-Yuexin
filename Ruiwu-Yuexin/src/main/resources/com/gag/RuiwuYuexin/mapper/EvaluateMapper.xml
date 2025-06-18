@@ -14,13 +14,13 @@
     </resultMap>
 
     <insert id="insertEvaluate" parameterType="com.gag.RuiwuYuexin.entity.Evaluate" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO t_evaluates (user_id, good_id, star_level, comment, create_time)
+        INSERT INTO evaluates (user_id, good_id, star_level, comment, create_time)
         VALUES (#{userId}, #{goodId}, #{starLevel}, #{comment}, #{createTime})
     </insert>
 
     <select id="findEvaluatesByGoodId" resultMap="EvaluateResultMap" parameterType="long">
         SELECT id, user_id, good_id, star_level, comment, create_time
-        FROM t_evaluates
+        FROM evaluates
         WHERE good_id = #{goodId}
     </select>
 
@@ -32,7 +32,7 @@
 
     <select id="findImagesByEvaluateId" resultMap="EvaluationImageDTOResultMap" parameterType="long">
         SELECT id, TO_BASE64(image_data) AS image_data, sort_order
-        FROM t_evaluate_images
+        FROM evaluate_images
         WHERE evaluate_id = #{evaluateId}
         ORDER BY sort_order
     </select>

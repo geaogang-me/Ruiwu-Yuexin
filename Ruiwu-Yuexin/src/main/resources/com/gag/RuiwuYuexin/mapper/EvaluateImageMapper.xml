@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.gag.RuiwuYuexin.mapper.EvaluateImageMapper">
     <insert id="insertImage" parameterType="com.gag.RuiwuYuexin.entity.EvaluateImage">
-        INSERT INTO t_evaluate_images
+        INSERT INTO evaluate_images
             (evaluate_id, image_data, sort_order, create_time)
         VALUES
             (#{evaluateId}, #{imageData}, #{sortOrder}, #{createTime})
