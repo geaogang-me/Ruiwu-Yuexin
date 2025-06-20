@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gag.RuiwuYuexin.mapper.ShopMapper">
+
+    <select id="findByUserId" parameterType="long" resultType="com.gag.RuiwuYuexin.entity.Shop">
+        SELECT id, shop_name, user_id
+        FROM shop
+        WHERE user_id = #{userId}
+        LIMIT 1
+    </select>
+</mapper>
