@@ -61,7 +61,17 @@ const routes = [
     path: '/evaluate',
     name: 'Evaluate',
     component: () => import('../views/Evaluate.vue')
-  } 
+  },
+  {
+    path: '/shopManage',
+    name: 'ShopManage',
+    component: () => import('../views/ShopManage.vue')
+  },
+  {
+    path: '/addGood',
+    name: 'AddGood',
+    component: () => import('../views/AddGood.vue')
+  }  
 ];
 
 

@@ -49,13 +49,16 @@
       <!-- 右侧操作按钮 -->
       <div class="right-actions">
         <div class="action-blocks">
-          <div class="action-item" @click="goToFavorite">
+          <div v-if="!isShopper" class="action-item" @click="goToFavorite">
             <img src="@/assets/icon/喜欢.svg" alt="收藏" />
           </div>
-          <div class="action-item" @click="goToCart">
+          <div v-if="!isShopper" class="action-item" @click="goToCart">
             <el-badge :value="cartCount" class="cart-badge">
               <img src="@/assets/icon/购物车.svg" alt="购物车" />
             </el-badge>
+          </div>
+          <div v-if="isShopper" class="action-item" @click="goToShopManage">
+            <img src="@/assets/icon/店铺.svg" alt="店铺" />
           </div>
           <div class="action-item" @click="goToOrder">
             <img src="@/assets/icon/订单查询.svg" alt="订单" />
@@ -146,6 +149,10 @@ import { useAuth } from "@/composables/useAuth";
 const { checkTokenValidity, clearLocal } = useAuth();
 const router = useRouter();
 const store = useStore();
+const userInfo = ref(null);
+const isShopper = computed(() => {
+  return userInfo.value?.role === "shopper";
+});
 
 // 本地状态
 const cartCount = ref(0);
@@ -197,7 +204,7 @@ async function fetchCartCount() {
   }
 }
 // --- 用户信息 ---
-const userInfo = ref(null);
+
 const showUserMenu = ref(false);
 onMounted(() => {
   const u = localStorage.getItem("userInfo");
@@ -262,25 +269,64 @@ if (token && userInfo1) {
 const fetchgood = async () => {
   loading.value = true;
   try {
-    const res = await api.get("/good", {
-      params: {
-        keyword: searchKeyword.value,
-        type: searchType.value,
-        page: page.value,
-        size: pageSize.value,
-      },
-    });
-    const d = res.data.data;
-    goodList.value = d.records;
-    total.value = d.total;
+    // 准备通用参数
+    const params = {
+      keyword: searchKeyword.value,
+      page: page.value,
+      size: pageSize.value,
+    };
+
+    let apiUrl = "/good"; // 默认接口
+    let response = null;
+
+    // 商家使用不同的接口和参数
+    if (isShopper.value && userInfo.value?.shopId) {
+      apiUrl = "/shop/goods";
+      params.shopId = userInfo.value.shopId;
+      params.status = 1;
+      // 调用商家专属接口
+      response = await api.get(apiUrl, { params });
+    }
+    // 普通用户使用原有逻辑
+    else {
+      // 普通用户需要传递搜索类型
+      params.type = searchType.value;
+      response = await api.get(apiUrl, { params });
+    }
+
+    // 处理响应数据
+    if (response.data && response.data.data) {
+      const d = response.data.data;
+      goodList.value = d.records || d.list; // 适应不同返回结构
+      total.value = d.total || d.count; // 适应不同返回结构
+    } else {
+      console.error("API返回数据结构异常", response);
+    }
   } catch (e) {
-    console.error(e);
+    console.error("商品加载失败:", e);
+    // 友好的错误处理
+    if (e.response && e.response.status === 401) {
+      // 处理未授权错误
+      clearLocal();
+      userInfo.value = null;
+    } else if (e.response && e.response.status === 403) {
+      // 处理无权限错误
+      alert("您没有权限访问此内容");
+    }
   } finally {
     setTimeout(() => {
       loading.value = false;
     }, 500);
   }
 };
+const goToShopManage = () => {
+  if (!checkTokenValidity()) {
+    clearLocal();
+    return;
+  }
+  router.push("/shopManage");
+};
+
 const search = () => {
   page.value = 1;
   fetchgood();

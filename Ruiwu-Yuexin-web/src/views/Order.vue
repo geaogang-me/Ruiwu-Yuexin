@@ -70,35 +70,47 @@
               </div>
             </div>
             <div class="order-summary">
-              <el-button
-                v-if="order.status === 1"
-                type="primary"
-                class="gopay-button"
-                @click="navigateTo('/payment', { orderId: order.id })"
-              >
-                去支付
-              </el-button>
-              <el-button
-                v-else-if="order.status === 3"
-                type="primary"
-                class="takegoods-button"
-                @click="onConfirmReceipt(order.id)"
-              >
-                确认收货
-              </el-button>
-              <el-button
-                v-else-if="order.status === 4"
-                type="primary"
-                class="gocomment-button"
-                @click="
-                  navigateTo('/evaluate', {
-                    orderId: order.id,
-                    goodId: order.goodId,
-                  })
-                "
-              >
-                去评价
-              </el-button>
+              <template v-if="userInfo.role !== 'shopper'">
+                <el-button
+                  v-if="order.status === 1"
+                  type="primary"
+                  class="gopay-button"
+                  @click="navigateTo('/payment', { orderId: order.id })"
+                >
+                  去支付
+                </el-button>
+                <el-button
+                  v-else-if="order.status === 3"
+                  type="primary"
+                  class="takegoods-button"
+                  @click="onConfirmReceipt(order.id)"
+                >
+                  确认收货
+                </el-button>
+                <el-button
+                  v-else-if="order.status === 4"
+                  type="primary"
+                  class="gocomment-button"
+                  @click="
+                    navigateTo('/evaluate', {
+                      orderId: order.id,
+                      goodId: order.goodId,
+                    })
+                  "
+                >
+                  去评价
+                </el-button>
+              </template>
+              <template v-else>
+                <el-button
+                  v-if="order.status === 2"
+                  type="primary"
+                  class="deliver-button"
+                  @click="onDeliver(order.id)"
+                >
+                  去发货
+                </el-button>
+              </template>
             </div>
           </div>
         </div>
@@ -111,6 +123,52 @@
       </div>
     </div>
   </div>
+  <el-dialog v-model="deliverDialogVisible" title="订单发货" width="600px">
+    <div class="deliver-dialog">
+      <!-- 收货信息 -->
+      <div class="deliver-section">
+        <h3>收货信息</h3>
+        <div class="deliver-info">
+          <p><span class="label">收货人：</span>{{ currentOrder.receiver }}</p>
+          <p>
+            <span class="label">联系电话：</span>{{ currentOrder.telephone }}
+          </p>
+          <p>
+            <span class="label">收货地址：</span>
+            {{ currentOrder.city }} {{ currentOrder.full_address }}
+          </p>
+        </div>
+      </div>
+
+      <!-- 商品信息 -->
+      <div class="product-section">
+        <h3>商品信息</h3>
+        <div class="product-item">
+          <div class="product-image-container">
+            <img
+              :src="currentOrder.goodImageUrl"
+              class="product-image"
+              alt="商品图片"
+            />
+          </div>
+          <div class="product-detail">
+            <h4>{{ currentOrder.goodName }}</h4>
+            <p>
+              <span class="label">单价：</span>¥{{ currentOrder.unitPrice }}
+            </p>
+            <p><span class="label">数量：</span>{{ currentOrder.num }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="deliverDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmDelivery">确认发货</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -118,17 +176,28 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/plugins/axios";
 import Swal from "sweetalert2";
+const userInfo = ref(JSON.parse(localStorage.getItem("userInfo")) || {});
+const deliverDialogVisible = ref(false);
+const currentOrder = ref(null);
 
-// （A）用于筛选按钮的状态数组
-const filterStatuses = [
+const allFilterStatuses = [
   { name: null, label: "所有订单", class: "all-orders" },
   { name: 1, label: "待付款", class: "Pending-payment" },
   { name: 2, label: "待发货", class: "pending-shipment" },
   { name: 3, label: "待收货", class: "Shipped" },
   { name: 4, label: "待评价", class: "no_comment" },
 ];
+const shopFilterStatuses = [
+  { name: null, label: "所有订单", class: "all-orders" },
+  { name: 2, label: "待发货", class: "pending-shipment" },
+  { name: 5, label: "已完成", class: "completed" },
+];
 
-// （B）用于卡片头部映射所有状态
+// 根据角色选用哪套
+const filterStatuses = computed(() =>
+  userInfo.value.role === "shopper" ? shopFilterStatuses : allFilterStatuses
+);
+
 const statusMap = {
   1: { label: "待付款", class: "Pending-payment" },
   2: { label: "待发货", class: "pending-shipment" },
@@ -178,7 +247,8 @@ const filteredOrders = computed(() =>
 );
 
 const currentLabel = computed(() => {
-  const found = filterStatuses.find((s) => s.name === filterStatus.value);
+  const statuses = filterStatuses.value;
+  const found = statuses.find((s) => s.name === filterStatus.value);
   return found ? found.label : "所有订单";
 });
 
@@ -217,8 +287,19 @@ function isNew(id) {
 // 业务逻辑
 async function fetchOrders() {
   await withLoading(async () => {
-    const userId = JSON.parse(localStorage.getItem("userInfo")).id;
-    const res = await api.get("/order/list", { params: { userId } });
+    let res;
+    if (userInfo.value.role === "shopper") {
+      // 商家
+      res = await api.get("/order/shop/orders", {
+        params: { shopId: userInfo.value.shopId },
+        headers: { Authorization: `Bearer ${userInfo.value.token}` },
+      });
+    } else {
+      // 普通用户
+      res = await api.get("/order/list", {
+        params: { userId: userInfo.value.id },
+      });
+    }
     if (res.data.code !== "200") return swalError("加载订单失败");
     const enriched = enrichOrders(res.data.data);
     markNewItems(displayed.value, enriched);
@@ -240,6 +321,53 @@ function onFilter(status) {
 
 function navigateTo(path, query = {}) {
   router.push({ path, query });
+}
+
+// 为商家添加的发货方法
+async function onDeliver(orderId) {
+  // 找到当前订单
+  const order = allOrders.value.find((o) => o.id === orderId);
+  if (order) {
+    currentOrder.value = order;
+    deliverDialogVisible.value = true;
+  }
+}
+async function confirmDelivery() {
+  if (!currentOrder.value) return;
+
+  const orderId = currentOrder.value.id;
+
+  // 关闭对话框
+  deliverDialogVisible.value = false;
+
+  // 调用发货API
+  const { isConfirmed } = await confirmDialog(
+    "确认发货？",
+    "请确认已准备好发货"
+  );
+  if (!isConfirmed) return;
+
+  await withLoading(async () => {
+    try {
+      // 调用发货API（这里添加您的实际API地址）
+      const res = await api.post(`/order/deliver/${orderId}`, {
+        headers: { Authorization: `Bearer ${userInfo.value.token}` },
+      });
+
+      if (res.data.code !== "200") {
+        return swalError("发货失败，请重试");
+      }
+
+      // 更新本地订单状态为已发货(3)
+      const idx = allOrders.value.findIndex((o) => o.id === orderId);
+      if (idx > -1) allOrders.value[idx].status = 3;
+
+      swalSuccess("发货成功！");
+    } catch (error) {
+      console.error("发货错误:", error);
+      swalError("发货操作异常");
+    }
+  });
 }
 
 async function onConfirmReceipt(orderId) {
@@ -361,7 +489,84 @@ onMounted(fetchOrders);
   font-size: 12px;
   font-weight: bold;
 }
+/* 在现有样式中添加 */
+.deliver-button {
+  background: linear-gradient(to right, #2196f3, #0d47a1) !important;
+  border: none !important;
+}
+.deliver-dialog {
+  padding: 15px;
+}
 
+.deliver-section,
+.product-section {
+  margin-bottom: 20px;
+}
+
+.deliver-section h3,
+.product-section h3 {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.deliver-info p {
+  margin: 8px 0;
+  display: flex;
+}
+
+.deliver-info .label {
+  font-weight: bold;
+  min-width: 80px;
+  color: #666;
+}
+
+.product-item {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.product-image-container {
+  width: 80px;
+  height: 80px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.product-detail {
+  flex-grow: 1;
+}
+
+.product-detail h4 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.product-detail p {
+  margin: 5px 0;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
 .orders-list-container {
   max-height: calc(100vh - 250px);
   overflow-y: auto;
