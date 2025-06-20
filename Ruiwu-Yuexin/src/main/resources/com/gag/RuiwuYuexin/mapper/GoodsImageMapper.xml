@@ -9,4 +9,10 @@
      WHERE good_id = #{goodId}
      ORDER BY sort_order;
   </select>
+    <insert id="insertSelective" parameterType="com.gag.RuiwuYuexin.entity.GoodsImage">
+        INSERT INTO goods_image
+        (good_id, image_data, sort_order, create_time)
+        VALUES
+        (#{goodId}, #{imageData}, #{sortOrder}, #{createTime})
+    </insert>
 </mapper>

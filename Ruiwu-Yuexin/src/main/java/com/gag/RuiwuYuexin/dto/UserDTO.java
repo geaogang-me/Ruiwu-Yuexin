@@ -14,6 +14,8 @@ public class UserDTO implements Serializable {
     private String email;
     private String address;
     private String avatar;
+    private String role;
+    private Long shopId;
     private String token;
     private Long expire;
 }

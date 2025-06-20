@@ -22,9 +22,9 @@
     <!-- 2. 插入新用户 -->
     <insert id="insertUser" parameterType="com.gag.RuiwuYuexin.entity.User" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO `user`
-        (username, password, phone, email, address, avatar, create_time, update_time)
+        (username, password, phone, email, address, avatar, role,create_time, update_time)
         VALUES
-        (#{username}, #{password}, #{phone}, #{email}, #{address}, #{avatar}, NOW(), NOW())
+        (#{username}, #{password}, #{phone}, #{email}, #{address}, #{avatar},#{role}, NOW(), NOW())
     </insert>
 
     <!-- 3. 登录查询（如果需要全部字段也可以用 resultMap） -->
@@ -38,6 +38,7 @@
         email,
         address,
         avatar,
+        role,
         create_time,
         update_time
         FROM `user`
@@ -57,6 +58,7 @@
         email,
         address,
         avatar,
+        role,
         create_time,
         update_time
         FROM `user`
@@ -73,6 +75,7 @@
         email,
         address,
         avatar,
+        role,
         create_time,
         update_time
         FROM `user`

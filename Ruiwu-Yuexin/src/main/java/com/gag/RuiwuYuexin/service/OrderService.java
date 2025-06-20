@@ -11,5 +11,7 @@ public interface OrderService {
     void batchUpdateOrderStatus(List<Long> orderIds);
     List<OrderDetailDto> getOrderDetailsByUserId(Long userId);
     boolean confirmReceipt(Long orderId);
+    boolean confirmDeliver(Long orderId);
     boolean completeEvaluation(Long orderId);
+    List<OrderDetailDto> getOrderDetailsByShopId(Long shopId);
 }

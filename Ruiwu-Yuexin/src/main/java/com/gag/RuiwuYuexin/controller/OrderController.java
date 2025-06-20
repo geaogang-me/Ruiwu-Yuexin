@@ -57,6 +57,17 @@ public class OrderController {
         List<OrderDetailDto> list = orderService.getOrderDetailsByUserId(userId);
         return Result.success(list);
     }
+
+    @GetMapping("/shop/orders")
+    public Result<List<OrderDetailDto>> getOrdersByShop(@RequestParam Long shopId) {
+        if (shopId == null) {
+            return Result.error("商家ID不能为空");
+        }
+        List<OrderDetailDto> list = orderService.getOrderDetailsByShopId(shopId);
+        return Result.success(list);
+    }
+
+
     @PostMapping("/confirmReceipt/{orderId}")
     public Result<String> confirmReceipt(@PathVariable Long orderId) {
         boolean success = orderService.confirmReceipt(orderId);
@@ -64,6 +75,16 @@ public class OrderController {
             return Result.success("确认收货成功");
         } else {
             return Result.error("确认收货失败");
+        }
+    }
+
+    @PostMapping("/deliver/{orderId}")
+    public Result<String> confirmDeliver(@PathVariable Long orderId) {
+        boolean success = orderService.confirmDeliver(orderId);
+        if (success) {
+            return Result.success("确认发货成功");
+        } else {
+            return Result.error("确认发货失败");
         }
     }
     @PostMapping("/evaluate/{orderId}")

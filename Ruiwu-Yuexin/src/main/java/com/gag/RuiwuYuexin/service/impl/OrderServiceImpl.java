@@ -54,7 +54,10 @@ public class OrderServiceImpl implements OrderService {
         }
         return items;
     }
-
+    @Override
+    public List<OrderDetailDto> getOrderDetailsByShopId(Long shopId) {
+        return orderMapper.findOrderDetailsByShopId(shopId);
+    }
     @Override
     public boolean confirmReceipt(Long orderId) {
         Order order = orderMapper.selectById(orderId);
@@ -65,6 +68,17 @@ public class OrderServiceImpl implements OrderService {
         }
         return false;
     }
+    @Override
+    public boolean confirmDeliver(Long orderId) {
+        Order order = orderMapper.selectById(orderId);
+        if (order != null && order.getStatus() == 2) { // 待发货状态才能发货
+            order.setStatus(3); // 3 表示已发货
+            orderMapper.updateById(order);
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean completeEvaluation(Long orderId) {
         Order order = orderMapper.selectById(orderId);

@@ -33,6 +33,8 @@ public interface OrderMapper {
 
     List<OrderDetailDto> getOrderDetailsByUserId(@Param("userId") Long userId);
 
+    List<OrderDetailDto> findOrderDetailsByShopId(@Param("shopId") Long shopId);
+
     /** 根据订单ID查询订单 */
     @Select("SELECT * FROM orders WHERE id = #{orderId}")
     Order selectById(@Param("orderId") Long orderId);

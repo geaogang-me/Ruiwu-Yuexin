@@ -1,7 +1,9 @@
 package com.gag.RuiwuYuexin.controller;
 
 import com.gag.RuiwuYuexin.dto.UserDTO;
+import com.gag.RuiwuYuexin.entity.Shop;
 import com.gag.RuiwuYuexin.entity.User;
+import com.gag.RuiwuYuexin.service.ShopService;
 import com.gag.RuiwuYuexin.service.UserService;
 import com.gag.RuiwuYuexin.common.Result;
 import com.gag.RuiwuYuexin.utils.JwtUtils;
@@ -28,6 +30,9 @@ public class LoginController {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
+    @Autowired
+    private ShopService shopService;
+
     @PostMapping("/login")
     public Result<UserDTO> login(@RequestBody User userRequest) {
         User user = userService.findByUserName(userRequest.getUsername());
@@ -41,6 +46,11 @@ public class LoginController {
             BeanUtils.copyProperties(user, userDTO);
             userDTO.setToken(token);
             userDTO.setExpire(jwtUtils.getExpiration());
+
+            Shop shop = shopService.findByUserId(user.getId());
+            if (shop != null) {
+                userDTO.setShopId(shop.getId());
+            }
             return Result.success(userDTO);
         }
         return Result.error("用户名密码不正确");

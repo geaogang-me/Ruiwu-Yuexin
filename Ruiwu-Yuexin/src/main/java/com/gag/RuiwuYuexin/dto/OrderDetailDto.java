@@ -20,4 +20,9 @@ public class OrderDetailDto {
     private String goodName;
     private byte[] goodImage;      // 如果是 Base64，可直接放
     private BigDecimal unitPrice;     // 单价
+    //地址信息
+    private String receiver;
+    private String telephone;
+    private String city;
+    private String fullAddress;
 }

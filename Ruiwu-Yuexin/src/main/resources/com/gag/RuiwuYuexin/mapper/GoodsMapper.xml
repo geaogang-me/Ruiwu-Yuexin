@@ -22,6 +22,51 @@
         LIMIT #{size} OFFSET #{offset}
     </select>
 
+    <select id="selectPageByShop" resultType="com.gag.RuiwuYuexin.entity.Goods">
+        SELECT *
+        FROM goods g
+        WHERE g.belong_shop = #{shopId}
+        <if test="status != null">
+            AND g.status = #{status}
+        </if>
+        ORDER BY g.createTime DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <!-- 统计总数 -->
+    <select id="countByShop" resultType="long">
+        SELECT COUNT(1)
+        FROM goods g
+        WHERE g.belong_shop = #{shopId}
+        <if test="status != null">
+            AND g.status = #{status}
+        </if>
+    </select>
+
+    <select id="selectById" resultType="com.gag.RuiwuYuexin.entity.Goods">
+        SELECT *
+        FROM goods
+        WHERE id = #{id}
+    </select>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.gag.RuiwuYuexin.entity.Goods">
+        UPDATE goods
+        <set>
+            <!-- 只有非 null 的字段才会被包含 -->
+            <if test="goodName != null">good_name = #{goodName},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="stock != null">stock = #{stock},</if>
+            <if test="status != null">status = #{status},</if>
+            <!-- 如有其它字段，也可依此类推 -->
+            <if test="updateTime != null">updateTime = #{updateTime},</if>
+        </set>
+        WHERE id = #{id}
+        AND belong_shop = #{belongShop}  <!-- 双重保险：只能更新自己店铺的商品 -->
+    </update>
+
+
+
+
     <!-- 总数统计 -->
     <select id="countGoods" resultType="int">
         SELECT COUNT(*) FROM goods
@@ -44,6 +89,29 @@
             #{id}
         </foreach>
     </select>
+    <insert id="insertSelective" parameterType="com.gag.RuiwuYuexin.entity.Goods"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO goods
+        (good_name, good_image, price, belong_shop, stock, status, description, createTime, updateTime)
+        VALUES
+        (#{goodName}, #{goodImage}, #{price}, #{belongShop}, #{stock}, #{status}, #{description}, #{createTime}, #{updateTime})
+    </insert>
+
+    <delete id="deleteByIdAndShop">
+        DELETE FROM goods
+        WHERE id = #{id}
+        AND belong_shop = #{shopId}
+    </delete>
+
+    <!-- 批量 -->
+    <delete id="deleteBatchByShop" parameterType="map">
+        DELETE FROM goods
+        WHERE belong_shop = #{shopId}
+        AND id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
 
 
 </mapper>

@@ -16,6 +16,17 @@ public interface GoodsMapper {
     int countGoods(@Param("keyword") String keyword,
                      @Param("type") String type);
 
+    List<Goods> selectPageByShop(@Param("shopId") Long shopId,
+                                 @Param("status") Integer status,
+                                 @Param("offset") int offset,
+                                 @Param("size") int size);
+    long countByShop(@Param("shopId") Long shopId,@Param("status") Integer status);
+    Goods selectById(@Param("id") Integer id);
+
+    int updateByPrimaryKeySelective(Goods record);
+
+
+
     // 新增：按 id 查并关联 images
     @Select("SELECT * FROM goods WHERE id = #{id}")
     @Results({
@@ -29,5 +40,14 @@ public interface GoodsMapper {
     Goods selectByIdWithImages(@Param("id") int id);
 
     List<FavoriteDto> selectGoodsByIds(@Param("ids") List<Long> ids);
+    int insertSelective(Goods record);
 
+    int deleteByIdAndShop(@Param("id") Integer id,
+                          @Param("shopId") Long shopId);
+
+    /**
+     * 批量删除
+     */
+    int deleteBatchByShop(@Param("list") List<Integer> ids,
+                          @Param("shopId") Long shopId);
 }

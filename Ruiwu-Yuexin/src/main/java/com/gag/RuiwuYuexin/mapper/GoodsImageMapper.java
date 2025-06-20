@@ -8,4 +8,6 @@ import java.util.List;
 @Mapper
 public interface GoodsImageMapper {
     List<GoodsImage> selectBygoodId(@Param("goodId") int goodId);
+
+    int insertSelective(GoodsImage record);
 }
