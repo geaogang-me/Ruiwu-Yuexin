@@ -4,7 +4,7 @@
     <div class="app-header">
       <div class="app-title">
         <i class="fas fa-home"></i>
-        <h1>首页</h1>
+        <h1>{{ isShopper ? "商店首页" : "首页" }}</h1>
       </div>
     </div>
 
