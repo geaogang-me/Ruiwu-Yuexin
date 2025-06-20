@@ -520,7 +520,6 @@ async function submitOrder() {
         Swal.fire({
           icon: "error",
           title: res.data.msg || "提交失败",
-          timer: 1000,
           showConfirmButton: false,
         });
       }

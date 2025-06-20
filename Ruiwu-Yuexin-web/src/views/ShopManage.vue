@@ -12,6 +12,7 @@
           type="danger"
           :disabled="!selectedIds.length"
           @click="deleteBatch"
+          class="custom-button"
         >
           <i class="fas fa-trash"></i> 批量删除 ({{ selectedIds.length }})
         </el-button>
@@ -36,7 +37,7 @@
             v-for="good in goodList"
             :key="good.id"
             class="good-card"
-            @click="() => openGoodDialog(good)"
+            :style="{ '--delay': Math.random() * 0.3 + 's' }"
           >
             <el-checkbox
               class="select-checkbox"
@@ -61,6 +62,16 @@
                 <span class="amount">{{ good.price }}</span>
               </div>
               <div class="stock">库存: {{ good.stock }}</div>
+            </div>
+            <div class="action-buttons">
+              <el-button
+                type="primary"
+                size="small"
+                @click.stop="openGoodDialog(good)"
+                class="edit-button"
+              >
+                编辑
+              </el-button>
             </div>
           </div>
         </div>
@@ -140,14 +151,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/plugins/axios";
-import { useStore } from "vuex";
 import { ElMessage } from "element-plus";
 
 const router = useRouter();
-const store = useStore();
 const userInfo = computed(() => {
   const u = localStorage.getItem("userInfo");
   return u ? JSON.parse(u) : null;
@@ -174,6 +183,12 @@ const currentGood = ref({
 function navigateTo(path) {
   router.push("/home");
 }
+
+watch(page, (newVal, oldVal) => {
+  if (newVal !== oldVal) {
+    fetchShopGoods();
+  }
+});
 // 获取当前商家的商品
 const fetchShopGoods = async () => {
   if (!userInfo.value?.shopId) {
@@ -246,6 +261,12 @@ async function deleteSingle(id) {
       params: { shopId: userInfo.value.shopId },
     });
     ElMessage.success("删除成功");
+
+    // 判断是否需要回到上一页
+    if (goodList.value.length === 1 && page.value > 1) {
+      page.value--;
+    }
+    fetchShopGoods();
     // 在本地移除
     goodList.value = goodList.value.filter((g) => g.id !== id);
     // 如果批量模式下也要移除
@@ -264,6 +285,12 @@ async function deleteBatch() {
       params: { shopId: userInfo.value.shopId },
     });
     ElMessage.success("批量删除成功");
+    const deletedCount = selectedIds.value.length;
+    if (goodList.value.length === deletedCount && page.value > 1) {
+      page.value--;
+    }
+    selectedIds.value = [];
+    fetchShopGoods();
     // 在本地移除
     goodList.value = goodList.value.filter(
       (g) => !selectedIds.value.includes(g.id)
@@ -304,163 +331,400 @@ onMounted(fetchShopGoods);
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 .app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 10px 0;
+  margin-bottom: 20px;
+  background: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 22px;
+  color: #2c3e50;
+}
+
+.app-title i {
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 28px;
 }
 
 .button-box {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 30px;
-}
-.back-button {
-  background: #736cf8;
-  border: 1px solid #dcdfe6;
-  color: #ebeef3;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 6px;
-  padding: 8px 16px;
-  font-weight: 500;
-  transition: all 0.3s;
-  margin-right: 10px;
-}
-.back-button:hover {
-  background: #f0f0f0;
-  color: #409eff;
-}
-.app-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 22px;
-  color: #333;
-}
-
-.app-title i {
-  color: #5d9bff;
+  gap: 20px;
 }
 
 .add-button {
-  padding: 10px 20px;
+  padding: 12px 24px;
   font-weight: 500;
   background: linear-gradient(to right, #5d9bff, #409eff);
   border: none;
-  box-shadow: 0 2px 6px rgba(93, 155, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(93, 155, 255, 0.3);
   transition: all 0.3s ease;
 }
 
 .add-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(93, 155, 255, 0.4);
+  box-shadow: 0 6px 16px rgba(93, 155, 255, 0.4);
+  background: linear-gradient(to right, #4d8bfa, #2e8bff);
+}
+
+.back-button {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid #dcdfe6;
+}
+
+.back-button:hover {
+  background: #f5f7fa;
+  color: #409eff;
+  border-color: #c0c4cc;
+}
+
+.custom-button {
+  padding: 12px 24px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(245, 108, 108, 0.3);
+  transition: all 0.3s ease;
+}
+
+.custom-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(245, 108, 108, 0.4);
 }
 
 /* 商品网格样式 */
+.content-area {
+  position: relative;
+  min-height: 500px;
+}
+
 .good-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 25px;
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 .good-card {
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-  transition: all 0.3s ease;
   position: relative;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+  padding: 1px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: cardAppear 0.5s ease forwards;
+  animation-delay: var(--delay);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .good-card:hover {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.select-checkbox {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
 }
 
 .card-header {
-  padding: 10px;
+  position: absolute;
+  top: 240px;
+  right: 10px;
+  z-index: 10;
   text-align: right;
 }
 
 .status-badge {
-  padding: 4px 10px;
-  border-radius: 12px;
+  padding: 6px 12px;
+  border-radius: 14px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .status-badge.active {
-  background: #e8f4ff;
+  background: rgba(64, 158, 255, 0.15);
   color: #409eff;
 }
 
 .status-badge.inactive {
-  background: #fef0f0;
+  background: rgba(245, 108, 108, 0.15);
   color: #f56c6c;
 }
 
 .image-container {
-  height: 180px;
+  height: 220px;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f9f9f9;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  background: #f8fafc;
 }
 
 .good-image {
   max-width: 100%;
   max-height: 100%;
-  object-fit: contain;
+  border-radius: 12px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.good-card:hover .good-image {
+  transform: scale(1.05);
 }
 
 .good-info {
-  padding: 15px;
+  padding: 16px;
+  flex: 1;
 }
 
 .good-name {
   font-size: 16px;
-  font-weight: 500;
-  margin-bottom: 8px;
-  height: 44px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 44px;
 }
 
 .price {
-  color: #e53935;
-  font-weight: bold;
-  font-size: 18px;
+  color: #ff5000;
+  font-weight: 700;
+  font-size: 20px;
+  margin-bottom: 5px;
 }
 
 .currency {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .stock {
   color: #666;
   font-size: 14px;
-  margin-top: 5px;
 }
 
-/* 操作对话框样式 */
+.action-buttons {
+  padding: 0 16px 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.edit-button {
+  width: 100%;
+  background: linear-gradient(to right, #2766f5, #3a8dff);
+  border: none;
+  box-shadow: 0 2px 8px rgba(39, 102, 245, 0.3);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.edit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 102, 245, 0.4);
+  background: linear-gradient(to right, #1a5be9, #2979ff);
+}
+
+/* 空状态样式 */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+  margin-top: 30px;
+}
+
+.empty-state i {
+  font-size: 70px;
+  color: #d1e0fc;
+  margin-bottom: 25px;
+  opacity: 0.6;
+}
+
+.empty-state h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #2c3e50;
+}
+
+.empty-state p {
+  max-width: 500px;
+  margin: 0 auto;
+  color: #6c757d;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* 加载动画 */
+.loader-animation {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(39, 102, 245, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid #2766f5;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 分页样式 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 40px;
+  padding: 15px 20px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+.pagination button {
+  padding: 10px 25px;
+  border: none;
+  background: linear-gradient(to right, #2766f5, #3a8dff);
+  color: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(39, 102, 245, 0.25);
+  font-weight: 500;
+}
+
+.pagination button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 15px rgba(39, 102, 245, 0.35);
+}
+
+.pagination button:disabled {
+  background: #c5d8ff;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.pagination span {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* 响应式适配 */
+@media (max-width: 992px) {
+  .good-grid {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  }
+
+  .app-title h3 {
+    font-size: 20px;
+  }
+
+  .button-box {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .button-box {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .good-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .image-container {
+    height: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .good-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+/* 对话框样式调整 */
 .good-dialog {
   display: flex;
+  flex-direction: column;
   gap: 20px;
 }
 
 .good-image-container {
-  flex: 0 0 150px;
-  height: 150px;
+  height: 180px;
   border-radius: 8px;
   overflow: hidden;
   background: #f5f7fa;
@@ -473,58 +737,5 @@ onMounted(fetchShopGoods);
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-}
-
-.good-form {
-  flex: 1;
-}
-
-/* 空状态样式 */
-.empty-state {
-  text-align: center;
-  padding: 60px 0;
-  color: #909399;
-}
-
-.empty-state i {
-  font-size: 60px;
-  margin-bottom: 20px;
-  opacity: 0.4;
-}
-
-.empty-state h3 {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
-.empty-state p {
-  font-size: 14px;
-}
-
-/* 分页样式 */
-.pagination {
-  margin-top: 40px;
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-}
-
-.pagination button {
-  padding: 8px 16px;
-  background: #f5f7fa;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.pagination button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.pagination span {
-  color: #606266;
 }
 </style>
