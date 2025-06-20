@@ -50,4 +50,12 @@ public interface GoodsMapper {
      */
     int deleteBatchByShop(@Param("list") List<Integer> ids,
                           @Param("shopId") Long shopId);
+
+    // 查询当前库存
+    @Select("SELECT stock FROM goods WHERE id = #{goodId}")
+    Integer getStock(Long goodId);
+
+    // 更新库存（带库存校验的乐观锁）
+    @Update("UPDATE goods SET stock = stock - #{quantity} WHERE id = #{goodId} AND stock >= #{quantity}")
+    int reduceStock(@Param("goodId") Long goodId, @Param("quantity") Integer quantity);
 }

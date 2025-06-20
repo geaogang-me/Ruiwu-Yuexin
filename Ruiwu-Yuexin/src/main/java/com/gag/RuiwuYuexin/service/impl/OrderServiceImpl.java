@@ -2,6 +2,8 @@ package com.gag.RuiwuYuexin.service.impl;
 import com.gag.RuiwuYuexin.dto.OrderDetailDto;
 import com.gag.RuiwuYuexin.dto.OrderRequest;
 import com.gag.RuiwuYuexin.entity.Order;
+import com.gag.RuiwuYuexin.exception.ServiceException;
+import com.gag.RuiwuYuexin.mapper.GoodsMapper;
 import com.gag.RuiwuYuexin.mapper.OrderMapper;
 import com.gag.RuiwuYuexin.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +18,27 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderMapper orderMapper;
+    @Autowired
+    private GoodsMapper goodMapper;
 
     @Override
     public Long createOrder(OrderRequest req) {
+        // 查询商品库存
+        Integer stock = goodMapper.getStock(req.getGoodId());
+        if (stock == null) {
+            throw new ServiceException( "ORDER_ERROR_001", "商品不存在");
+        }
+
+        // 校验库存是否充足
+        if (stock < req.getQuantity()) {
+            throw new ServiceException("ORDER_ERROR_002", "库存不足，当前库存: " + stock);
+        }
+
+        // 尝试扣减库存（使用乐观锁）
+        int updateCount = goodMapper.reduceStock(req.getGoodId(), req.getQuantity());
+        if (updateCount == 0) {
+            throw new ServiceException("ORDER_ERROR_003", "库存不足或已被修改，请重试");
+        }
         // 1. 拿单价
         BigDecimal unitPrice = orderMapper.selectUnitPriceByGoodId(req.getGoodId());
         // 2. 计算总价

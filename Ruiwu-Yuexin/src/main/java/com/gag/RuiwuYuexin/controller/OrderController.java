@@ -2,6 +2,7 @@ package com.gag.RuiwuYuexin.controller;
 
 import com.gag.RuiwuYuexin.dto.OrderDetailDto;
 import com.gag.RuiwuYuexin.dto.OrderRequest;
+import com.gag.RuiwuYuexin.exception.ServiceException;
 import com.gag.RuiwuYuexin.service.OrderService;
 import com.gag.RuiwuYuexin.common.Result;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,11 +21,17 @@ public class OrderController {
 
     @PostMapping("/create")
     public Result<Long> createOrder(@RequestBody OrderRequest req) {
-        if (req.getUserId() == null) {
-            return Result.error("用户未登录");
+        try {
+            if (req.getUserId() == null) {
+                return Result.error("用户未登录");
+            }
+            Long orderId = orderService.createOrder(req);
+            return Result.success(orderId);
+        } catch (ServiceException e) {
+            return Result.error(e.getMessage());
+        } catch (Exception e) {
+            return Result.error("创建订单失败: " + e.getMessage());
         }
-        Long orderId = orderService.createOrder(req);
-        return Result.success(orderId);
     }
     @PostMapping("/updateStatus")
     public Result<String> updateOrderStatus(@RequestParam Long orderId) {

@@ -2,10 +2,12 @@ package com.gag.RuiwuYuexin.service;
 
 import com.gag.RuiwuYuexin.dto.OrderDetailDto;
 import com.gag.RuiwuYuexin.dto.OrderRequest;
+import jakarta.transaction.Transactional;
 
 import java.util.List;
 
 public interface OrderService {
+    @Transactional
     Long createOrder(OrderRequest req);
     void updateOrderStatusToShipped(Long orderId);
     void batchUpdateOrderStatus(List<Long> orderIds);
