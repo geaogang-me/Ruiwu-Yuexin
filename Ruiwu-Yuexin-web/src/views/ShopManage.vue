@@ -458,10 +458,9 @@ onMounted(fetchShopGoods);
 }
 
 .select-checkbox {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 10;
+  height: 18px;
+  top: 1px;
+  left: auto;
 }
 
 .card-header {
