@@ -19,7 +19,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -39,7 +38,6 @@ public class EvaluateServiceImpl implements EvaluateService {
         if (starLevel == null || starLevel < 1 || starLevel > 5) {
             return Result.error("评分星级必须是 1 到 5 之间的整数");
         }
-
         // 2. 保存评价主表
         Evaluate eval = new Evaluate();
         eval.setUserId(userId);
@@ -47,9 +45,8 @@ public class EvaluateServiceImpl implements EvaluateService {
         eval.setStarLevel(starLevel);
         eval.setComment(comment);
         eval.setCreateTime(LocalDateTime.now());
-        evaluateMapper.insertEvaluate(eval);  // 会回写 eval.id
-
-        // 3. 保存图片表（如果有）
+        evaluateMapper.insertEvaluate(eval);  //回写 eval.id
+        // 3. 保存图片表
         if (images != null && !images.isEmpty()) {
             int order = 1;
             for (MultipartFile file : images) {
