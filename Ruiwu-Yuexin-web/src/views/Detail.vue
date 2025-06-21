@@ -22,7 +22,7 @@
             :key="idx"
             class="thumbnail-container"
             :class="{ active: idx === current }"
-            @click="selectImage(idx)"
+            @mouseover="selectImage(idx)"
           >
             <img :src="url" alt="商品缩略图" class="thumbnail" />
           </div>
