@@ -30,32 +30,6 @@ RuiWu-Yuexin 是一套电商平台示例系统，采用前后端分离架构，�
   - Java JDK 17
   - Node.js v18
 
-## 🚀 快速开始
-
-1. 克隆仓库：
-   ```bash
-   git clone https://github.com/yourusername/RuiWu-Yuexin.git
-   cd RuiWu-Yuexin
-   ```
-
-2. 后端启动
-   ```bash
-   cd backend
-   ./mvnw spring-boot:run
-   ```
-
-3. 前端启动
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
-
-4. 在浏览器中访问：
-   ```
-   http://localhost:3000
-   ```
-
 ## 🗂️ 项目结构
 
 ```
