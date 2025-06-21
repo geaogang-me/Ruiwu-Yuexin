@@ -19,6 +19,7 @@
                 </when>
             </choose>
         </where>
+        ORDER BY createTime DESC
         LIMIT #{size} OFFSET #{offset}
     </select>
 
