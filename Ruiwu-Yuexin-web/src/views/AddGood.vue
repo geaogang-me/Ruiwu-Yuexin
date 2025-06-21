@@ -63,7 +63,7 @@
       </el-form-item>
 
       <!-- 主图 -->
-      <el-form-item label="* 主图" prop="mainImageFile">
+      <el-form-item label="主图" prop="mainImageFile">
         <el-upload
           class="upload-demo"
           :show-file-list="false"
