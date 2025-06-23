@@ -96,11 +96,6 @@ public class LoginController {
         if (existingUser != null) {
             return Result.error("用户已存在");
         }
-        if (registerRequest.getAvatar() != null && registerRequest.getAvatar().contains(",")) {
-            String base64Data = registerRequest.getAvatar().split(",")[1];
-            byte[] avatarBytes = Base64.getDecoder().decode(base64Data);
-            registerRequest.setAvatarBytes(avatarBytes);
-        }
         // 插入新用户
         userService.insertUser(registerRequest);
         return Result.success("User registered successfully");

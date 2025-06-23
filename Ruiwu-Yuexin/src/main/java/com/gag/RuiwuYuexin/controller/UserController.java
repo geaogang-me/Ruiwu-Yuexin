@@ -33,11 +33,6 @@ public class UserController {
         User user = userService.findById(userId);
         UserDTO userDTO = new UserDTO();
         BeanUtils.copyProperties(user, userDTO);
-        // 添加对头像的处理
-        if (user.getAvatarBytes() != null) {
-            String base64Avatar = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(user.getAvatarBytes());
-            userDTO.setAvatar(base64Avatar);
-        }
         return Result.success(userDTO); // 修改这里返回 UserDTO
     }
     @PostMapping("/user/verify-password")
@@ -116,20 +111,10 @@ public class UserController {
             return Result.error("用户已存在");
         }
         BeanUtils.copyProperties(userDTO, user, "id");
-        if (userDTO.getAvatar() != null && userDTO.getAvatar().contains(",")) {
-            String base64Data = userDTO.getAvatar().split(",")[1];
-            byte[] avatarBytes = Base64.getDecoder().decode(base64Data);
-            user.setAvatarBytes(avatarBytes);
-        }
         User updatedUser = userService.updateUser(user);
         // 返回更新后的用户信息
         UserDTO updatedUserDTO = new UserDTO();
         BeanUtils.copyProperties(updatedUser, updatedUserDTO);
-        // 添加对头像的处理
-        if (updatedUser.getAvatarBytes() != null) {
-            String base64Avatar = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(updatedUser.getAvatarBytes());
-            updatedUserDTO.setAvatar(base64Avatar);
-        }
         return Result.success(updatedUserDTO);
     }
 }

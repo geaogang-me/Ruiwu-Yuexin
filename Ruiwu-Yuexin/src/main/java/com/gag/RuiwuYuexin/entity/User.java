@@ -14,7 +14,6 @@ public class User implements Serializable {
  private String email;
  private String address;
  private String  avatar;
- private byte[] avatarBytes;
  private String role;
  @JsonFormat(pattern = "yyyy-MM-dd")
  private LocalDateTime createTime;
