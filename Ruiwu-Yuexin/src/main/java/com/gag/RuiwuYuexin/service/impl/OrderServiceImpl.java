@@ -7,11 +7,13 @@ import com.gag.RuiwuYuexin.mapper.GoodsMapper;
 import com.gag.RuiwuYuexin.mapper.OrderMapper;
 import com.gag.RuiwuYuexin.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -20,7 +22,8 @@ public class OrderServiceImpl implements OrderService {
     private OrderMapper orderMapper;
     @Autowired
     private GoodsMapper goodMapper;
-
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
     @Override
     public Long createOrder(OrderRequest req) {
         // 查询商品库存
@@ -53,6 +56,10 @@ public class OrderServiceImpl implements OrderService {
         o.setStatus(1); // 初始状态：待发货
         o.setCreated(LocalDateTime.now());
         orderMapper.insertOrder(o);
+        // 写 Redis，用 JSON 或简单拼接存储 goodId 和数量
+        String redisKey = "order:waiting:pay:" + o.getId();
+        String redisValue = o.getGoodId() + ":" + o.getNum();
+        redisTemplate.opsForValue().set(redisKey, redisValue, 1, TimeUnit.MINUTES);
         return o.getId();
     }
     @Override

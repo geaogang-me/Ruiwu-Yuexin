@@ -38,6 +38,19 @@ public interface OrderMapper {
     /** 根据订单ID查询订单 */
     @Select("SELECT * FROM orders WHERE id = #{orderId}")
     Order selectById(@Param("orderId") Long orderId);
+
+    /** 根据订单ID查询订单状态 */
+    @Select("SELECT status FROM orders WHERE id = #{orderId}")
+    Integer selectStatusByOrderId(@Param("orderId") Long orderId);
+
+    /** 更新单个订单状态 */
+    @Update("""
+      UPDATE orders
+      SET status = #{status}
+      WHERE id = #{orderId}
+      """ )
+    int updateStatus(@Param("orderId") Long orderId, @Param("status") int status);
+
     @Update({
             "<script>",
             "UPDATE orders SET status = #{status} WHERE id IN",
@@ -50,6 +63,9 @@ public interface OrderMapper {
             @Param("orderIds") List<Long> orderIds,
             @Param("status") int status
     );
+
+    @Delete("DELETE FROM orders WHERE id = #{orderId}")
+    int deleteByPrimaryKey(@Param("orderId") Long orderId);
     /** 根据订单ID更新订单状态 */
     @Update("""
   UPDATE orders

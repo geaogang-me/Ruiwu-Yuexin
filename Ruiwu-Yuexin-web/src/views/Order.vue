@@ -204,6 +204,7 @@ const statusMap = {
   3: { label: "待收货", class: "Shipped" },
   4: { label: "待评价", class: "no_comment" },
   5: { label: "已完成", class: "completed" },
+  6: { label: "已取消", class: "cancel" }
 };
 
 // 通用弹窗
@@ -737,6 +738,11 @@ onMounted(fetchOrders);
 .status-completed,
 .completed {
   background: linear-gradient(to right, #87e3f4, #90ea99);
+  color: #fff;
+}
+.status-cancel,
+.cancel {
+  background: linear-gradient(to right, #6c7a7d, #5c795f);
   color: #fff;
 }
 .gopay-button {

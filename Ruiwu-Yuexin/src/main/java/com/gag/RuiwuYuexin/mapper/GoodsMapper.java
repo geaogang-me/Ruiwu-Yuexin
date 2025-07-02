@@ -55,6 +55,10 @@ public interface GoodsMapper {
     @Select("SELECT stock FROM goods WHERE id = #{goodId}")
     Integer getStock(Long goodId);
 
+    /** 回滚库存 */
+    @Update("UPDATE goods SET stock = stock + #{quantity} WHERE id = #{goodId}")
+    int addStock(@Param("goodId") Long goodId, @Param("quantity") Integer quantity);
+
     // 更新库存（带库存校验的乐观锁）
     @Update("UPDATE goods SET stock = stock - #{quantity} WHERE id = #{goodId} AND stock >= #{quantity}")
     int reduceStock(@Param("goodId") Long goodId, @Param("quantity") Integer quantity);
