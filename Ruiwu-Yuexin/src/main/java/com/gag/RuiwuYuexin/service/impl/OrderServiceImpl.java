@@ -59,7 +59,7 @@ public class OrderServiceImpl implements OrderService {
         // 写 Redis，用 JSON 或简单拼接存储 goodId 和数量
         String redisKey = "order:waiting:pay:" + o.getId();
         String redisValue = o.getGoodId() + ":" + o.getNum();
-        redisTemplate.opsForValue().set(redisKey, redisValue, 1, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(redisKey, redisValue, 30, TimeUnit.MINUTES);
         return o.getId();
     }
     @Override

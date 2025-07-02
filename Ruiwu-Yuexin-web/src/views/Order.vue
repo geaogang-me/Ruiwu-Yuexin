@@ -791,6 +791,9 @@ onMounted(fetchOrders);
   border: none;
   color: white;
 }
+.cancel-button{
+  border-radius: 10px;
+}
 .takegoods-button {
   padding: 10px 25px;
   border-radius: 10px;
