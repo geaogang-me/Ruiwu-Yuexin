@@ -95,6 +95,21 @@ public class OrderServiceImpl implements OrderService {
         }
         return false;
     }
+
+    @Override
+    public boolean orderCancel(Long orderId) {
+        Order order = orderMapper.selectById(orderId);
+        if (order != null && order.getStatus() == 1) { // 已发货状态才能收货
+            order.setStatus(6); // 4 表示已完成
+            orderMapper.updateById(order);
+            Long goodId = order.getGoodId();
+            Integer qty   = order.getNum();
+            goodMapper.addStock(goodId, qty);
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean confirmDeliver(Long orderId) {
         Order order = orderMapper.selectById(orderId);

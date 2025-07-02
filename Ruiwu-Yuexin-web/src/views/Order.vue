@@ -80,6 +80,15 @@
                   去支付
                 </el-button>
                 <el-button
+                  v-if="order.status === 1"
+                  type="danger"
+                  class="cancel-button"
+                  @click="onCancelOrder(order.id)"
+                  style="margin-left: 8px;"
+                >
+                  取消订单
+                </el-button>
+                <el-button
                   v-else-if="order.status === 3"
                   type="primary"
                   class="takegoods-button"
@@ -385,6 +394,33 @@ async function onConfirmReceipt(orderId) {
     swalSuccess("确认收货成功");
     navigateTo("/evaluate", { orderId, goodId: allOrders.value[idx].goodId });
   });
+}
+
+//取消订单
+async function onCancelOrder(orderId) {
+  const { isConfirmed } = await Swal.fire({
+    title: '确认取消订单？',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: '确认',
+    cancelButtonText: '再想想',
+  });
+  if (!isConfirmed) return;
+
+  try {
+    const res = await api.post(`/order/cancel/${orderId}`);
+    if (res.data.code === '200') {
+      // 本地更新状态
+      const idx = allOrders.value.findIndex(o => o.id === orderId);
+      if (idx > -1) allOrders.value[idx].status = 6; // 3 代表已取消
+      Swal.fire({ icon: 'success', title: '取消成功', timer: 1000, showConfirmButton: false });
+    } else {
+      Swal.fire({ icon: 'error', title: '取消失败', text: res.data.message || '', timer: 1500 });
+    }
+  } catch (err) {
+    console.error('取消订单错误', err);
+    Swal.fire({ icon: 'error', title: '网络异常，取消失败', timer: 1500 });
+  }
 }
 
 onMounted(fetchOrders);

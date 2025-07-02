@@ -73,7 +73,15 @@ public class OrderController {
         List<OrderDetailDto> list = orderService.getOrderDetailsByShopId(shopId);
         return Result.success(list);
     }
-
+    @PostMapping("/cancel/{orderId}")
+    public Result<String> orderCancel(@PathVariable Long orderId){
+        boolean success = orderService.orderCancel(orderId);
+        if (success) {
+            return Result.success("取消订单成功");
+        } else {
+            return Result.error("取消订单失败");
+        }
+    }
 
     @PostMapping("/confirmReceipt/{orderId}")
     public Result<String> confirmReceipt(@PathVariable Long orderId) {

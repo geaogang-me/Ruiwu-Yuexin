@@ -63,7 +63,7 @@ public class KeyExpirationListener implements MessageListener {
         int updated = goodsMapper.addStock(goodId, qty);
         log.info("Rolled back stock for goodId={}, qty={}, result rows={}", goodId, qty, updated);
 
-        // 更新订单状态为“已取消”(status == 3)
+        // 更新订单状态为“已取消”(status == 6)
         int rows = orderMapper.updateStatus(orderId, 6);
         log.info("Updated order {} status to CANCELLED, result rows={}", orderId, rows);
     }
