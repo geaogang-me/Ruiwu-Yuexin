@@ -2,7 +2,7 @@ package com.gag.RuiwuYuexin.controller;
 
 import com.gag.RuiwuYuexin.common.Result;
 import com.gag.RuiwuYuexin.dto.EvaluationDetailDTO;
-import com.gag.RuiwuYuexin.service.impl.EvaluateServiceImpl;
+import com.gag.RuiwuYuexin.service.EvaluateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,7 +13,7 @@ import java.util.List;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class EvaluateController {
-    private final EvaluateServiceImpl evaluateService;
+    private final EvaluateService evaluateService;
 
     @PostMapping("/evaluate/submit")
     public Result<?> submitEvaluate(
@@ -27,6 +27,7 @@ public class EvaluateController {
     }
     @GetMapping("/evaluations/{goodId}")
     public Result<List<EvaluationDetailDTO>> getEvaluationByGoodId(@PathVariable Long goodId) {
-        return evaluateService.getEvaluationsByGoodId(goodId);
+        List<EvaluationDetailDTO> list = evaluateService.getEvaluationsByGoodId(goodId);
+        return Result.success(list);
     }
 }

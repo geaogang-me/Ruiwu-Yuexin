@@ -14,5 +14,5 @@ public interface EvaluateService {
             String comment,
             List<MultipartFile> images
     );
-    Result<List<EvaluationDetailDTO>> getEvaluationsByGoodId(Long goodId);
+    List<EvaluationDetailDTO> getEvaluationsByGoodId(Long goodId);
 }

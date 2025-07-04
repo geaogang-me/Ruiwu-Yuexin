@@ -68,11 +68,11 @@ public class EvaluateServiceImpl implements EvaluateService {
     }
 
     @Override
-    public Result<List<EvaluationDetailDTO>> getEvaluationsByGoodId(Long goodId) {
+    public List<EvaluationDetailDTO> getEvaluationsByGoodId(Long goodId) {
         List<Evaluate> evaluates = evaluateMapper.findEvaluatesByGoodId(goodId);
 
         if (evaluates == null || evaluates.isEmpty()) {
-            return Result.success(Collections.emptyList());
+            return Collections.emptyList();
         }
         List<EvaluationDetailDTO> dtos = new ArrayList<>();
         for (Evaluate evaluate : evaluates) {
@@ -91,6 +91,6 @@ public class EvaluateServiceImpl implements EvaluateService {
             detailDTO.setUserAvatar(userInfo.getAvatar());
             dtos.add(detailDTO);
         }
-        return Result.success(dtos);
+        return dtos;
     }
 }
