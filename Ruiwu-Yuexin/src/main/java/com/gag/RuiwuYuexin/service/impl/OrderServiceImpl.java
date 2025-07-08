@@ -1,4 +1,5 @@
 package com.gag.RuiwuYuexin.service.impl;
+
 import com.gag.RuiwuYuexin.dto.OrderDetailDto;
 import com.gag.RuiwuYuexin.dto.OrderRequest;
 import com.gag.RuiwuYuexin.entity.Order;
@@ -20,16 +21,19 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderMapper orderMapper;
+
     @Autowired
     private GoodsMapper goodMapper;
+
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
+
     @Override
     public Long createOrder(OrderRequest req) {
         // 查询商品库存
         Integer stock = goodMapper.getStock(req.getGoodId());
         if (stock == null) {
-            throw new ServiceException( "ORDER_ERROR_001", "商品不存在");
+            throw new ServiceException("ORDER_ERROR_001", "商品不存在");
         }
 
         // 校验库存是否充足
@@ -42,6 +46,7 @@ public class OrderServiceImpl implements OrderService {
         if (updateCount == 0) {
             throw new ServiceException("ORDER_ERROR_003", "库存不足或已被修改，请重试");
         }
+
         // 1. 拿单价
         BigDecimal unitPrice = orderMapper.selectUnitPriceByGoodId(req.getGoodId());
         // 2. 计算总价
@@ -53,23 +58,38 @@ public class OrderServiceImpl implements OrderService {
         o.setAddressId(req.getAddressId());
         o.setNum(req.getQuantity());
         o.setPrice(total);
-        o.setStatus(1); // 初始状态：待发货
+        o.setStatus(1); // 初始状态：待支付
         o.setCreated(LocalDateTime.now());
         orderMapper.insertOrder(o);
-        // 写 Redis，用 JSON 或简单拼接存储 goodId 和数量
+
+        // 写 Redis，用 JSON 或简单拼接存储 goodId 和数量，30分钟后自动过期
         String redisKey = "order:waiting:pay:" + o.getId();
         String redisValue = o.getGoodId() + ":" + o.getNum();
-        redisTemplate.opsForValue().set(redisKey, redisValue, 30, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(redisKey, redisValue, 1, TimeUnit.MINUTES);
+
         return o.getId();
     }
+
     @Override
     public void updateOrderStatusToShipped(Long orderId) {
-        orderMapper.updateOrderStatus(orderId, 2); // 2 表示已支付
+        // 更新订单状态为已支付
+        orderMapper.updateOrderStatus(orderId, 2);
+        // 支付完成后，删除 Redis 中的待支付缓存
+        String redisKey = "order:waiting:pay:" + orderId;
+        redisTemplate.delete(redisKey);
     }
+
+    @Override
     public void batchUpdateOrderStatus(List<Long> orderIds) {
-        // 构建更新查询
+        // 批量更新订单状态为已支付
         orderMapper.batchUpdateOrderStatus(orderIds, 2);
+        // 删除对应 Redis 缓存
+        orderIds.forEach(id -> {
+            String redisKey = "order:waiting:pay:" + id;
+            redisTemplate.delete(redisKey);
+        });
     }
+
     @Override
     public List<OrderDetailDto> getOrderDetailsByUserId(Long userId) {
         List<OrderDetailDto> items = orderMapper.getOrderDetailsByUserId(userId);
@@ -81,10 +101,12 @@ public class OrderServiceImpl implements OrderService {
         }
         return items;
     }
+
     @Override
     public List<OrderDetailDto> getOrderDetailsByShopId(Long shopId) {
         return orderMapper.findOrderDetailsByShopId(shopId);
     }
+
     @Override
     public boolean confirmReceipt(Long orderId) {
         Order order = orderMapper.selectById(orderId);
@@ -99,12 +121,14 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public boolean orderCancel(Long orderId) {
         Order order = orderMapper.selectById(orderId);
-        if (order != null && order.getStatus() == 1) { // 已发货状态才能收货
-            order.setStatus(6); // 4 表示已完成
+        if (order != null && order.getStatus() == 1) { // 仅待支付状态可取消
+            order.setStatus(6); // 6 表示已取消
             orderMapper.updateById(order);
-            Long goodId = order.getGoodId();
-            Integer qty   = order.getNum();
-            goodMapper.addStock(goodId, qty);
+            // 恢复库存
+            goodMapper.addStock(order.getGoodId(), order.getNum());
+            // 删除 Redis 中的待支付缓存
+            String redisKey = "order:waiting:pay:" + orderId;
+            redisTemplate.delete(redisKey);
             return true;
         }
         return false;
@@ -124,12 +148,11 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public boolean completeEvaluation(Long orderId) {
         Order order = orderMapper.selectById(orderId);
-        if (order != null && order.getStatus() == 4) { // 只允许从"已完成"状态更新
+        if (order != null && order.getStatus() == 4) { // 已完成状态才能评价
             order.setStatus(5); // 5 表示已评价
             orderMapper.updateById(order);
             return true;
         }
         return false;
     }
-
 }

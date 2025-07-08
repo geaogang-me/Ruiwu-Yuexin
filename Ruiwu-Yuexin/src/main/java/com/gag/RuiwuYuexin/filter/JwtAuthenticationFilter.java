@@ -9,7 +9,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -26,8 +25,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtils jwtUtils;
 
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -52,63 +49,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-        String uri = request.getRequestURI();
-        // 跳过登录、注册、登出等不需要认证的请求
-        if (uri.contains("/api/login") ||
-                uri.contains("/api/register") ||
-                uri.contains("/api/logout")) {
-
-            filterChain.doFilter(request, response);
-            return;
-        }
-        try {
-            String jwt = parseJwt(request);
-            if (jwt != null) {
-                // 解析 JWT，获取用户 ID
+        String jwt = parseJwt(request);
+        if (jwt != null) {
+            try {
+                // 1. 验签并检查是否过期（JwtUtils 内部会抛 ExpiredJwtException）
                 Long userId = jwtUtils.getUserIdFromToken(jwt);
 
-                // 从 Redis 校验 token 是否有效
-                String redisKey = "TOKEN_" + userId;
-                String redisToken = redisTemplate.opsForValue().get(redisKey);
-                if (redisToken == null || !redisToken.equals(jwt)) {
-                    // Token 无效，若是 logout 请求则放行
-                    if ("/api/logout".equals(uri)) {
-                        filterChain.doFilter(request, response);
-                        return;
-                    }
-                    ResponseUtils.unauthorized(response, "Token 已失效或已登出，请重新登录");
-                    return;
+                // 2. 直接在这里判断有没有过期（可选，因为上一步如果过期会抛异常）
+                if (jwtUtils.isTokenExpired(jwt)) {
+                    throw new ExpiredJwtException(null, null, "Token 已过期");
                 }
 
-                // 设置 Spring Security 上下文
-                if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // 3. 构造 Spring Security Context
+                if (SecurityContextHolder.getContext().getAuthentication() == null) {
                     UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                            new UsernamePasswordAuthenticationToken(
+                                    userId, null, Collections.emptyList());
+                    authentication.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-            }
-        } catch (ExpiredJwtException e) {
-            logger.warn("Token 已过期：{}", e);
-            // Token 过期，返回特定错误码，前端统一处理刷新或重新登录
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write(
-                    "{\"code\":\"TOKEN_EXPIRED\",\"msg\":\"Token 已过期，请刷新或重新登录\"}"
-            );
-            return;
-        } catch (JwtException e) {
-            logger.error("无法解析 Token：", e);
-            // Token 异常（例如过期），若是 logout 请求则放行
-            if ("/api/logout".equals(uri)) {
-                filterChain.doFilter(request, response);
+            } catch (ExpiredJwtException e) {
+                // 过期异常 → 返回 401 + TOKEN_EXPIRED
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write(
+                        "{\"code\":\"TOKEN_EXPIRED\",\"msg\":\"Token 已过期，请重新登录\"}");
+                return;
+            } catch (JwtException e) {
+                // 签名异常或其他解析错误
+                ResponseUtils.unauthorized(response, "Token 无效：" + e.getMessage());
                 return;
             }
-            ResponseUtils.unauthorized(response, "Token 无效：" + e.getMessage());
-            return;
         }
-
-        // 继续执行其它过滤器或请求处理
         filterChain.doFilter(request, response);
     }
 }
