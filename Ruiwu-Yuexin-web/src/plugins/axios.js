@@ -1,6 +1,7 @@
 import axios from 'axios';
 import router from '@/router';
 import Swal from 'sweetalert2';
+import store from '@/store';
 
 const api = axios.create({
   baseURL: 'http://127.0.0.1:4000/api',
@@ -8,6 +9,15 @@ const api = axios.create({
 });
 
 let hasShownExpiredBox = false;
+
+// Helper to fully clear auth state, mirroring useAuth.clearLocal
+function clearAuthState() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('userInfo');
+  store.commit('setLogin', { isLogin: false, userId: null });
+  store.commit('setUserInfo', null);
+  router.push('/home');
+}
 
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token');
@@ -27,20 +37,16 @@ api.interceptors.response.use(
 
     if (response?.status === 401 && !hasShownExpiredBox) {
       hasShownExpiredBox = true;
-      console.log('显示 Swal 弹窗');
       Swal.fire({
         icon: 'error',
         title: '登录过期',
         text: '请求失败！登录已过期，请重新登录',
-        showCloseButton: false,
         confirmButtonText: '确定',
-        customClass: {
-          popup: 'swal-custom-class'
-        }
+        allowOutsideClick: false,
+        allowEscapeKey: false,
       }).then(() => {
         hasShownExpiredBox = false;
-        localStorage.removeItem('token');
-        router.push('/home');
+        clearAuthState();
       });
     }
 
