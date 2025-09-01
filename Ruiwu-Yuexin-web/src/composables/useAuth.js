@@ -11,11 +11,9 @@ export function useAuth() {
 
   // 返回一个 Promise，让调用方在 .then 里自己清空组件 state
   async function clearLocal() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userInfo');
+    // 使用store中已定义的logout方法来清除所有认证状态
+    store.dispatch('logout');
     tokenRef.value = null;
-    store.commit('setLogin', { isLogin: false, userId: null });
-    store.commit('setUserInfo', null);
     await router.push('/home');
     // 这里可以 resolve 一个标识，让组件知道清理完毕
     return Promise.resolve();

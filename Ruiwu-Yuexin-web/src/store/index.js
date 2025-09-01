@@ -35,6 +35,7 @@ export default createStore({
       state.userInfo = null;
       state.isLogin = false;
       state.token = null;
+      state.userId = null;
       // 清除 localStorage
       localStorage.removeItem('userInfo');
       localStorage.removeItem('token');

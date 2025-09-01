@@ -64,7 +64,7 @@
             <img src="@/assets/icon/订单查询.svg" alt="订单" />
           </div>
           <div class="action-item user-section">
-            <button v-if="!userInfo" class="login-button" @click="goLogin">
+            <button v-if="!isLogin" class="login-button" @click="goLogin">
               登录/注册
             </button>
             <div
@@ -73,7 +73,7 @@
               @mouseenter="showUserMenu = true"
               @mouseleave="showUserMenu = false"
             >
-              <img :src="userInfo.avatar || defaultAvatar" class="avatar" />
+              <img :src="userInfo?.avatar || defaultAvatar" class="avatar" />
               <span class="username">{{ truncatedName }}</span>
               <transition name="slide-fade">
                 <div v-show="showUserMenu" class="user-menu">
@@ -149,7 +149,9 @@ import { useAuth } from "@/composables/useAuth";
 const { checkTokenValidity, clearLocal } = useAuth();
 const router = useRouter();
 const store = useStore();
-const userInfo = ref(null);
+// 直接从Vuex store获取用户信息，确保UI与实际认证状态同步
+const userInfo = computed(() => store.getters.userInfo);
+const isLogin = computed(() => store.getters.isLogin);
 const isShopper = computed(() => {
   return userInfo.value?.role === "shopper";
 });
@@ -159,10 +161,7 @@ const cartCount = ref(0);
 
 const goToFavorite = () => {
   if (!checkTokenValidity()) {
-    clearLocal().then(() => {
-      userInfo.value = null;
-      store.commit("setLogin", { isLogin: false, userId: null });
-    });
+    clearLocal();
     return;
   }
   router.push("/favorite");
@@ -170,20 +169,14 @@ const goToFavorite = () => {
 // 跳转到购物车页
 const goToCart = () => {
   if (!checkTokenValidity()) {
-    clearLocal().then(() => {
-      userInfo.value = null;
-      store.commit("setLogin", { isLogin: false, userId: null });
-    });
+    clearLocal();
     return;
   }
   router.push("/cart");
 };
 const goToOrder = () => {
   if (!checkTokenValidity()) {
-    clearLocal().then(() => {
-      userInfo.value = null;
-      store.commit("setLogin", { isLogin: false, userId: null });
-    });
+    clearLocal();
     return;
   }
   router.push("/order");
@@ -206,10 +199,7 @@ async function fetchCartCount() {
 // --- 用户信息 ---
 
 const showUserMenu = ref(false);
-onMounted(() => {
-  const u = localStorage.getItem("userInfo");
-  if (u) userInfo.value = JSON.parse(u);
-});
+// 不需要在onMounted中手动从localStorage读取，通过Vuex getter自动获取
 const truncatedName = computed(() =>
   userInfo.value
     ? userInfo.value.username.length > 6
@@ -220,23 +210,13 @@ const truncatedName = computed(() =>
 const goLogin = () => router.push("/login");
 const goProfile = () => router.push("/Inform");
 const logout = async () => {
-  const token = userInfo.value?.token;
   try {
-    if (token) {
-      await api.post(
-        "/logout",
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-    }
+    // 通过store的logout action统一处理登出逻辑
+    await store.dispatch('logout');
   } catch (error) {
     console.warn("Logout request failed:", error.message);
   } finally {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userInfo");
-    userInfo.value = null;
+    // 由于我们使用了Vuex getter，这里不需要手动更新本地状态
     await clearLocal();
     showUserMenu.value = false;
   }

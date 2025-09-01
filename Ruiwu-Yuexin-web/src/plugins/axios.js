@@ -12,10 +12,8 @@ let hasShownExpiredBox = false;
 
 // Helper to fully clear auth state, mirroring useAuth.clearLocal
 function clearAuthState() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('userInfo');
-  store.commit('setLogin', { isLogin: false, userId: null });
-  store.commit('setUserInfo', null);
+  // 使用store中已定义的logout方法来清除所有认证状态
+  store.dispatch('logout');
   router.push('/home');
 }
 
