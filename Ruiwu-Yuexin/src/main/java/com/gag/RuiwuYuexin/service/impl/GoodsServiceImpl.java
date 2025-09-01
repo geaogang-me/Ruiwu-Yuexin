@@ -168,7 +168,7 @@ public class GoodsServiceImpl implements GoodsService {
         return deleted;
     }
 
-    private void clearGoodsPageCache() {
+    public void clearGoodsPageCache() {
         Set<String> keys = redisTemplate.keys("goods:page*");
         if (keys != null && !keys.isEmpty()) {
             redisTemplate.delete(keys);

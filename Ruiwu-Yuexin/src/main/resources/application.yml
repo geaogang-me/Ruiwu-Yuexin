@@ -26,10 +26,39 @@ spring:
           min-idle: 0
           max-wait: -1ms
 
+  # RabbitMQ配置
+  rabbitmq:
+    host: 192.168.81.128
+    port: 5672  # RabbitMQ默认端口是5672，15672是管理界面端口
+    username: admin
+    password: admin123
+    virtual-host: /
+    listener:
+      simple:
+        acknowledge-mode: manual
+        concurrency: 1
+        max-concurrency: 5
+
 mybatis:
   type-handlers-package: com.gag.RuiwuYuexin.handler
   configuration:
     map-underscore-to-camel-case: true
+
+# MySQL Binlog配置
+mysql:
+  host: localhost
+  port: 3306
+  username: root
+  password: 123456
+  binlog:
+    server-id: 123456
+    # 可选，指定要监听的数据库
+    database: ruiwuyuexin
+    # 可选，指定要监听的表，格式：database.table
+    tables:
+      - ruiwuyuexin.goods
+      - ruiwuyuexin.user
+      # 添加更多需要监听的表
 
 
 jwt:
