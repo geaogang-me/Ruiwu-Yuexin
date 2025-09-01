@@ -8,14 +8,18 @@ import com.gag.RuiwuYuexin.entity.GoodsImage;
 import com.gag.RuiwuYuexin.mapper.GoodsImageMapper;
 import com.gag.RuiwuYuexin.mapper.GoodsMapper;
 import com.gag.RuiwuYuexin.service.GoodsService;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -30,26 +34,43 @@ public class GoodsServiceImpl implements GoodsService {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
+    // ---------- Key builder to avoid empty segments ----------
+    private static String buildGoodsPageKey(String keyword, String type, int page, int size) {
+        List<String> parts = new ArrayList<>();
+        parts.add("goods");
+        parts.add("page");
+        if (keyword != null) {
+            String trimmed = keyword.trim();
+            if (!trimmed.isEmpty()) {
+                parts.add(trimmed);
+            }
+        }
+        // ensure we always have a type segment (use "all" as default)
+        String safeType = (type == null || type.trim().isEmpty()) ? "all" : type.trim();
+        parts.add(safeType);
+
+        parts.add(String.valueOf(page));
+        parts.add(String.valueOf(size));
+        return String.join(":", parts);
+    }
+
     @Override
     public Map<String, Object> findGoodsPage(String keyword, String type, int page, int size) {
-        // 1. 生成缓存 key
-        String safeKeyword = (keyword == null ? "" : keyword);
-        String safeType    = (type    == null ? "all" : type);
-        String cacheKey = String.format("goods:page:%s:%s:%d:%d",
-                safeKeyword, safeType, page, size);
+        // 1. 生成缓存 key（不会生成空段）
+        String cacheKey = buildGoodsPageKey(keyword, type, page, size);
 
         // 2. 尝试从 Redis 读取
         String cachedJson = redisTemplate.opsForValue().get(cacheKey);
         if (cachedJson != null) {
-            // 反序列化回 Map<String, Object>
             return JSON.parseObject(cachedJson, new TypeReference<Map<String, Object>>() {});
         }
 
         // 3. 缓存不命中，查询数据库
         int offset = (page - 1) * size;
-        List<Goods> list = goodsMapper.findGoodsPage(
-                "%" + safeKeyword + "%", type, offset, size);
-        int total = goodsMapper.countGoods("%" + safeKeyword + "%", type);
+        String safeKeywordForQuery = (keyword == null || keyword.trim().isEmpty()) ? "%" : ("%" + keyword.trim() + "%");
+        String safeTypeForQuery = (type == null || type.trim().isEmpty()) ? null : type.trim();
+        List<Goods> list = goodsMapper.findGoodsPage(safeKeywordForQuery, safeTypeForQuery, offset, size);
+        int total = goodsMapper.countGoods(safeKeywordForQuery, safeTypeForQuery);
 
         Map<String, Object> result = new HashMap<>();
         result.put("records", list);
@@ -59,8 +80,7 @@ public class GoodsServiceImpl implements GoodsService {
 
         // 4. 序列化并写入 Redis，设置过期时间（如 30 分钟）
         String jsonToCache = JSON.toJSONString(result);
-        redisTemplate.opsForValue()
-                .set(cacheKey, jsonToCache, 30, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(cacheKey, jsonToCache, 30, TimeUnit.MINUTES);
 
         return result;
     }
@@ -78,15 +98,12 @@ public class GoodsServiceImpl implements GoodsService {
 
     @Override
     public boolean updateGoods(Goods goods) {
-        // 选做：可以先查询一下，确认这条商品的 belong_shop 与入参一致
         Goods existing = goodsMapper.selectById(goods.getId());
         if (existing == null || !existing.getBelongShop().equals(goods.getBelongShop())) {
             return false;
         }
         goods.setCreateTime(null);
-        // 手动设置更新时间
         goods.setUpdateTime(LocalDateTime.now());
-        // 调用 Mapper 的选择性更新
         int updated = goodsMapper.updateByPrimaryKeySelective(goods);
         if (updated > 0) {
             clearGoodsPageCache();
@@ -101,7 +118,6 @@ public class GoodsServiceImpl implements GoodsService {
         if (p == null) return null;
         GoodsDetailDTO dto = new GoodsDetailDTO();
         BeanUtils.copyProperties(p, dto, "images");
-        // images: byte[] → Base64
         List<String> b64 = p.getImages().stream()
                 .map(img -> Base64.getEncoder().encodeToString(img.getImageData()))
                 .collect(Collectors.toList());
@@ -115,18 +131,13 @@ public class GoodsServiceImpl implements GoodsService {
                                      MultipartFile mainImage,
                                      List<MultipartFile> images) {
         try {
-            // 保存主图到 Goods.goodImage
             if (mainImage != null && !mainImage.isEmpty()) {
                 goods.setGoodImage(mainImage.getBytes());
             }
-            // 设置创建时间
             goods.setCreateTime(LocalDateTime.now());
-            // 插入 goods，主图一起插入
             goodsMapper.insertSelective(goods);
-            // 生成的主键ID
             Long newId = goods.getId().longValue();
 
-            // 保存附加图片到 goods_image
             if (images != null) {
                 int idx = 0;
                 for (MultipartFile file : images) {
@@ -140,18 +151,18 @@ public class GoodsServiceImpl implements GoodsService {
                     }
                 }
             }
+
             clearGoodsPageCache();
             return newId;
         } catch (IOException e) {
-            // 可以包装成自定义运行时异常，或直接抛 RuntimeException
             throw new RuntimeException("图片保存失败", e);
         }
     }
+
     @Override
     public boolean deleteByIdAndShop(Integer id, Long shopId) {
         int deleted = goodsMapper.deleteByIdAndShop(id, shopId);
         if (deleted > 0) {
-            // 清除分页缓存
             clearGoodsPageCache();
             return true;
         }
@@ -162,16 +173,46 @@ public class GoodsServiceImpl implements GoodsService {
     public int deleteBatchByShop(List<Integer> ids, Long shopId) {
         int deleted = goodsMapper.deleteBatchByShop(ids, shopId);
         if (deleted > 0) {
-            // 清除分页缓存
             clearGoodsPageCache();
         }
         return deleted;
     }
 
+    /**
+     * 安全的批量清理 goods:page* 缓存 —— 使用 SCAN 而不是 KEYS，防止阻塞 Redis。
+     * 会分批收集并删除，适合线上大 Key 场景。
+     */
     public void clearGoodsPageCache() {
-        Set<String> keys = redisTemplate.keys("goods:page*");
-        if (keys != null && !keys.isEmpty()) {
-            redisTemplate.delete(keys);
+        ScanOptions options = ScanOptions.scanOptions().match("goods:page*").count(500).build();
+        RedisConnection connection = null;
+        Cursor<byte[]> cursor = null;
+        try {
+            connection = redisTemplate.getConnectionFactory().getConnection();
+            cursor = connection.scan(options);
+            List<String> batch = new ArrayList<>(200);
+            while (cursor.hasNext()) {
+                byte[] raw = cursor.next();
+                String key = new String(raw, StandardCharsets.UTF_8);
+                batch.add(key);
+                if (batch.size() >= 100) {
+                    redisTemplate.delete(batch);
+                    batch.clear();
+                }
+            }
+            if (!batch.isEmpty()) {
+                redisTemplate.delete(batch);
+            }
+        } catch (Exception e) {
+            // LOG: 根据你项目的日志框架记录异常（这里用简单打印）
+            System.err.println("clearGoodsPageCache error: " + e.getMessage());
+        } finally {
+            // 关闭 cursor & connection（cursor implements Closeable）
+            try {
+                if (cursor != null) cursor.close();
+            } catch (Exception ignored) {}
+            try {
+                if (connection != null) connection.close();
+            } catch (Exception ignored) {}
         }
     }
 }
