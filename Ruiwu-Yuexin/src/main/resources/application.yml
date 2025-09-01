@@ -63,7 +63,7 @@ mysql:
 
 jwt:
   secret: MySuperSecretKey1234567890123456
-  expiration: 120000
+  expiration: 3600000
 
 logging:
   level:
