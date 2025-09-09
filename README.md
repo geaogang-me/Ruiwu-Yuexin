@@ -18,6 +18,7 @@
   - Spring Security
   - JWT 身份验证
   - Redis 缓存
+  - RabbitMQ
 - **数据库**
   - MySQL
 - **环境**
