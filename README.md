@@ -34,6 +34,9 @@
 
 - 接口数据和用户 Session 信息使用 Redis 缓存，提高性能。
 
+##数据同步
+-RabbitMQ监控binlog日志，实现Redis、Mysql数据同步。
+
 ## ⭐ 贡献指南
 
 欢迎提交 Issue 和 PR！
