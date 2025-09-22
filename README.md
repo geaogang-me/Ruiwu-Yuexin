@@ -18,6 +18,7 @@
   - Spring Security
   - JWT 身份验证
   - Redis 缓存
+  - RabbitMQ
 - **数据库**
   - MySQL
 - **环境**
@@ -32,6 +33,10 @@
 ## 💾 缓存
 
 - 接口数据和用户 Session 信息使用 Redis 缓存，提高性能。
+
+## 🔄 数据同步
+
+- RabbitMQ 监控 binlog 日志，实现 Redis、MySQL 数据同步。
 
 ## ⭐ 贡献指南
 
