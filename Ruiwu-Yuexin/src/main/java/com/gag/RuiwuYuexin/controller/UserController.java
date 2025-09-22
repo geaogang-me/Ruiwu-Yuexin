@@ -1,6 +1,7 @@
 package com.gag.RuiwuYuexin.controller;
 
 import com.gag.RuiwuYuexin.dto.UserDTO;
+import com.gag.RuiwuYuexin.dto.UserInfoDto;
 import com.gag.RuiwuYuexin.entity.User;
 import com.gag.RuiwuYuexin.service.UserService;
 import com.gag.RuiwuYuexin.common.Result;
@@ -23,7 +24,7 @@ public class UserController {
     private JwtUtils jwtUtils;
     // 获取用户信息
     @GetMapping("/user/info")
-    public Result<UserDTO> getUserInfo(HttpServletRequest request) {
+    public Result<UserInfoDto> getUserInfo(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return Result.error("缺少或格式错误的 Authorization 头");
@@ -31,9 +32,9 @@ public class UserController {
         String token = authHeader.replace("Bearer ", "");
         Long userId = jwtUtils.getUserIdFromToken(token);
         User user = userService.findById(userId);
-        UserDTO userDTO = new UserDTO();
-        BeanUtils.copyProperties(user, userDTO);
-        return Result.success(userDTO); // 修改这里返回 UserDTO
+        UserInfoDto userInfoDto = new UserInfoDto();
+        BeanUtils.copyProperties(user, userInfoDto);
+        return Result.success(userInfoDto); // 修改这里返回 UserDTO
     }
     @PostMapping("/user/verify-password")
     public Result<String> verifyPassword(@RequestBody Map<String, String> requestBody, HttpServletRequest request) {
