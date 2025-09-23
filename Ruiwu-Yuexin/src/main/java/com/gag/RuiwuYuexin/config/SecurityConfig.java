@@ -22,11 +22,11 @@ public class SecurityConfig {
                 .cors(cors -> {}) // ✅ 启用跨域支持
                    .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/user/verify-password","/user/change-password","/api/user/update","/api/user/info","/api/logout","/api/login",
-                                "/api/register", "/api/good","/api/good/**","/api/addToCart","/api/list/{userId}","/api/cart/delete"
+                                "/api/register", "/api/good","/api/good/**","/api/addToCart","/api/list/*","/api/cart/delete"
                                 ,"/api/cart/count","/api/favorite/add","/api/favorite/remove","/api/favorite/check","/api/evaluate/submit",
                                 "/api/favorite/list","/api/address/list","/api/address/add","/api/address/update","/api/order/shop/orders",
-                                "/api/address/delete/{id}","/api/order/create","/api/order/list","/api/token/refresh",
-                                "/api/review/add","/api/order/updateStatus","/api/order/batchUpdateStatus","/api/evaluations/{id}").permitAll()
+                                "/api/address/delete/*","/api/order/create","/api/order/list","/api/token/refresh",
+                                "/api/review/add","/api/order/updateStatus","/api/order/batchUpdateStatus","/api/evaluations/*").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

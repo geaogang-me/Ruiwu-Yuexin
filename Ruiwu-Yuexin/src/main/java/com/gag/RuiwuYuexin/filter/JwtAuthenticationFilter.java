@@ -56,10 +56,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 1. 验签并检查是否过期（JwtUtils 内部会抛 ExpiredJwtException）
                 Long userId = jwtUtils.getUserIdFromToken(jwt);
 
-                // 2. 直接在这里判断有没有过期（可选，因为上一步如果过期会抛异常）
-                if (jwtUtils.isTokenExpired(jwt)) {
-                    throw new ExpiredJwtException(null, null, "Token 已过期");
-                }
 
                 // 3. 构造 Spring Security Context
                 if (SecurityContextHolder.getContext().getAuthentication() == null) {
