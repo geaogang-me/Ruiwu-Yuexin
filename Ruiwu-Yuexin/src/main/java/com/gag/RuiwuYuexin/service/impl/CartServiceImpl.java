@@ -23,7 +23,7 @@ public class CartServiceImpl implements CartService {
 
     private static final String CART_KEY_PREFIX = "cart:user:";
     // 缓存 7 天（根据需要调整）
-    private static final Duration CART_TTL = Duration.ofDays(7);
+    private static final Duration CART_TTL = Duration.ofMillis(30);
 
     private String keyForUser(Long userId) {
         return CART_KEY_PREFIX + userId;

@@ -12,7 +12,6 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class FavoriteServiceImpl implements FavoriteService {
@@ -25,7 +24,7 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     private static final String FAVORITE_KEY_PREFIX = "favorite:user:";
     // 缓存 30 天（根据业务调整；也可不设置 TTL）
-    private static final Duration FAVORITE_TTL = Duration.ofDays(30);
+    private static final Duration FAVORITE_TTL = Duration.ofMillis(30);
 
     private String keyForUser(Long userId) {
         return FAVORITE_KEY_PREFIX + userId;
